@@ -1,0 +1,3240 @@
+@charset "utf-8";
+
+/* <system section="theme" selected="6653586347149180725"> */
+@import url("https://blog.hatena.ne.jp/-/theme/6653586347149180725.css?version=1667b959471ca5367e3ead50004cf0c01ba91e99");
+/* </system> */
+
+/* <system section="background" selected="undefined"> */
+
+/* </system> */
+
+ #blog-title {
+    margin: 0 auto;
+    padding: 0;
+    background-color: #006778 !important;
+}
+
+body {
+  font-family: 'Noto Sans JP', sans-selif;
+  padding-top: 63px;
+}
+
+.entry-content{
+  font-size: 16px;
+  color: #101820;
+}
+
+.entry-content em{
+  font-style: normal;
+  font-weight: bold;
+  background: #FFF100;
+  box-shadow: inset 0 -0.2em 0 #d7a22a;
+  border-radius: 2px;
+  }
+
+  p{
+    margin: 0 0 1.0em;
+  }
+
+  .entry-content a{
+    color: #006778;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+  
+  .entry-content a:hover {
+    color: #d7a22a;
+    text-decoration-color: #d7a22a;
+  }
+
+  /* #region 引用 */
+  .entry-content blockquote{ 
+    position:relative;
+    box-shadow: 2px 2px #006778, 4px 4px #d7a22a;
+    padding: 1rem 2.2rem;
+    background-color: #101820;
+    overflow: hidden;
+    color: #fff;
+    z-index: 0;
+}
+.entry-content blockquote:before{ 
+    position:absolute;
+    background-color:transparent;
+    color:#006778;
+    font-family:'FontAwesome';
+    content:'\f10d';
+    text-shadow: 2px 2px #d7a22a;
+    top:-25px;
+    left:-0.3rem;
+    padding:10px;
+    font-size:80px;
+    opacity: 0.6;
+    z-index: -1;
+}
+.entry-content blockquote:after{ 
+    position:absolute;
+    right:0px;
+    bottom:-40px;
+    background-color:transparent;
+    padding:10px;
+    color:#006778;
+    font-family:'FontAwesome';
+    content:'\f10e';
+    line-height:100px;
+    text-shadow: 2px 2px #d7a22a;
+    font-size:80px;
+    opacity: 0.6;
+    z-index: -1;
+}
+
+.entry-content blockquote cite { 
+    position: relative;
+    display: block;
+    padding-right:1rem;
+    font-size: 0.8rem;
+    text-align: right;
+    color: #fff;
+    z-index: 1;
+}
+/* #endregion */
+
+/* スマホ用改行ユーティリティ */
+.br-sp {
+  display: none;
+}
+
+@media screen and (max-width: 480px) {
+  .br-sp {
+    display: inline;
+  }
+}
+
+/* #region 折りたたみ Legacy Ver. */
+.legacy-details {
+  margin-bottom: 20px;
+}
+
+.legacy-details > summary {
+  position: relative;
+  display: block; /* 矢印を消す */
+  padding: 10px 10px 10px 30px; /* アイコンの余白を開ける */
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 1.5rem;
+  background-color: #006778;
+  border-radius: 10px 0;
+  color: #fff;
+  transition: 0.2s;
+  text-indent: 1rem;
+}
+
+.legacy-details > summary:hover {
+  background-color: #d7a22a;
+}
+
+.legacy-details > summary::-webkit-details-marker {
+  display: none;
+}
+/* #endregion */
+
+/* #region ヘッダー画像をスマホでも正常に表示 */
+@media (max-width:768px) {
+.header-image-only #blog-title {
+  height: 150px;
+}
+
+.header-image-only #blog-title #blog-title-inner {
+  background-size: cover;
+  height: 150px;
+}
+}
+/* #endregion */
+
+/* #region グローバルメニュー (PC) & ボトムメニュー (スマホ) */
+/* #region ===== PC用メニュー（メイン） ===== */
+.main-navigation {
+  background-color: #101820;
+  text-align: center;
+  padding: 10px 0;
+}
+
+.main-navigation ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.main-navigation li a {
+  color: white;
+  text-decoration: none;
+  font-weight: bold;
+  padding: 0px 10px;
+  box-shadow: 2px 2px #d7a22a, -2px -2px #006778;
+  transition: 0.3s;
+}
+
+.main-navigation li a:hover {
+  color: #d7a22a;
+}
+
+
+
+/* #endregion */
+
+/* #region =====PCグローバルナビ内検索フォーム===== */
+.search-menu .header-search-form,
+.search-result form{
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.header-search-form input[type="text"],
+.search-result input[type="text"] {
+  border: none;
+  box-shadow: 2px 2px #D7A22A, -2px -2px #006778;
+  padding: 8px 40px 8px 12px;
+  height: 100%;
+  width: 100%;
+  outline: none;
+  font-size: 14px;
+  font-weight: bold;
+  background-color: #101820;
+  color: white;
+  box-sizing: border-box;
+}
+
+.header-search-form input[type="text"]::placeholder,
+.search-result input[type="text"]::placeholder {
+  color: #eeeeee;
+  font-weight: bold;
+  opacity: 1;
+}
+
+.header-search-form .header-search-button,
+.search-result-form .search-result-button{
+  position: absolute;
+  top: 50%;
+  right: 20px;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 30px;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0;
+  font-size: 18px;
+}
+
+.header-search-form .header-search-button i,
+.search-result-form .search-result-button i {
+  color: #d7a22a; /* 虫眼鏡アイコンの色 */
+  font-size: 18px;
+  transition: all 0.3s ease;
+}
+
+.header-search-form .header-search-button:hover i,
+.search-result-form .search-result-button:hover i {
+  font-size: 18px;
+  transform: rotate(15deg);
+}
+/* #endregion */
+
+/* #region ===== スマホ用メニュー ===== */
+/* スマホ用検索バー */
+.mobile-search-bar {
+  transform: translateY(100%); /* 最初は完全に下に隠れてる */
+  transition: transform 0.3s ease; /* スムーズにスライド */
+  display: none;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  bottom: 50px; /* ボトムメニューの上に固定 */
+  left: 0;
+  right: 0;
+  background-color: #101820;
+  padding: 10px;
+  z-index: 998;
+}
+
+/* 表示時にスライドアップさせるクラス */
+.mobile-search-bar.active {
+  transform: translateY(0);
+}
+
+/* ボトムメニュー（メイン） */
+.bottom-nav {
+  display: none;
+}
+
+/* スマホ用表示切り替え */
+@media screen and (max-width: 768px) {
+  .main-navigation {
+    display: none; /* スマホでは上部メニュー非表示 */
+  }
+
+  .mobile-search-bar{
+    display: flex; /* 最初からdisplay:flexにしておく（非表示にしない） */
+  }
+
+  .header-search-form input[type="text"]{
+    padding: 8px 50px 8px 12px;
+  }
+
+  .mobile-search-bar .header-search-form{
+    display: flex;
+    flex: 1;
+    position: relative;
+    max-width: 90%;
+  }
+
+  .mobile-search-bar .header-search-form input[type="text"] {
+    width: 100%;
+    padding: 8px 50px 8px 12px; /* ボタン分スペース確保 */
+    border: none;
+    background-color: #101820;
+    color: white;
+    font-size: 14px;
+    box-sizing: border-box;
+    border-radius: 8px;
+    box-shadow: 2px 2px #d7a22a, -2px -2px #006778;
+    outline: none;
+  }
+
+  .mobile-search-bar .header-search-form .header-search-button {
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    transform: translateY(-50%);
+    width: 30px;
+    height: 30px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+  }
+
+  .bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: #101820;
+    justify-content: space-evenly;
+    align-items: center;
+    padding: 6px 0;
+    z-index: 999;
+    border-top: 2px solid #d7a22a;
+  }
+
+  .bottom-nav a {
+    flex: 1;
+    color: white;
+    text-decoration: none;
+    font-size: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .bottom-nav a i {
+    font-size: 18px;
+    margin-bottom: 2px;
+  }
+
+  .bottom-nav a:hover {
+    color: #d7a22a;
+  }
+
+  #box2-inner{
+    margin-bottom: 20px;
+  }
+}
+/* #endregion */
+/* #endregion */
+
+/* #region パンくずリスト  */
+
+/* 全体枠 */
+.breadcrumb {
+  /* font-family: 'Anton', sans-serif; */
+  font-size: 13px;
+  margin: 1em 0;
+  padding: 0.5em 1em;
+  color: #d7a22a;
+  background: #101820;
+  border-left: none;
+}
+
+/* パンくず並び */
+.breadcrumb-inner {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.3em 0.6em;
+  max-width: 100%;
+}
+
+/* トップリンクの🏠アイコン */
+.breadcrumb-link:first-of-type span::before {
+  content: "\f015";
+  font-family: "Font Awesome 5 Free";
+  font-weight: 900;
+  margin-right: 0.2em;
+  color: #D7A22A;
+  transition: color 0.3s ease;
+}
+
+.breadcrumb-gt{
+  color: #fff;
+  opacity: 1;
+}
+
+/* トップリンク hover時 */
+.breadcrumb-link:hover,
+.breadcrumb-child-link:hover,
+.breadcrumb-link:hover span::before {
+  color: #fff;
+}
+
+.breadcrumb-child:last-of-type{
+  color: #fff;
+}
+
+/* #endregion */
+
+/* #region アーカイブ記事 */
+/* 全体は縦のまま（デフォルト） */
+.page-archive .archive-entry {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1em;
+  margin-bottom: 2em;
+  /* box-shadow: 0 2px 6px rgba(0,0,0,0.1); */
+}
+
+.page-archive .entry-thumb-link {
+  float: left;
+  width: 200px;
+  aspect-ratio: 16 / 9;
+  margin-right: 1em;
+}
+
+.page-archive .entry-thumb {
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  border-radius: 4px;
+  margin-top: 10px;
+}
+
+.page-archive .archive-entry-body {
+  overflow: hidden;
+  margin-top: 10px;
+}
+
+.page-archive .entry-description {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+  /* カード全体 */
+  .page-archive .archive-entry {
+    display: block;
+    padding: 1em;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 2em;
+  }
+
+  /* サムネイル画像（上部） */
+  .page-archive .entry-thumb-link {
+    float: none !important;
+    width: 100%;
+    height: auto;
+    margin: 0 0 1em 0;
+    display: block;
+  }
+
+  .page-archive .entry-thumb {
+    width: 100%;
+    background-size: contain; /* cover → contain にして全体表示 */
+    background-position: center;
+    background-repeat: no-repeat;
+    margin-bottom: 1em;
+  }
+
+  /* 本文 */
+  .page-archive .archive-entry-body {
+    margin: 0;
+    display: block;
+    overflow: visible;
+  }
+
+  .page-archive .entry-description {
+    width: 100%;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.6;
+    margin-bottom: 1em;
+  }
+
+  /* タグの位置を整える */
+  .page-archive .archive-entry-tags-wrapper {
+    margin-top: 0.5em;
+  }
+
+  /* .archive-entry-tag .archive-entry-tag-link{
+    font-size: 0.85em;
+    line-height: 2em;
+    padding: 0 7px;
+  } */
+
+  /* はてなスターやブクマ */
+  .page-archive .social-buttons {
+    margin-top: 0.5em;
+  }
+}
+
+/* #endregion */
+
+/* #region サイドバー（最新記事） */
+
+ul.recent-entries .recent-entries-item,
+ul.related-entries .related-entries-item {
+  border: none;
+  padding: 0.5em 0;
+}
+
+ul.recent-entries.hatena-urllist.urllist-with-thumbnails,
+ul.related-entries.hatena-urllist.urllist-with-thumbnails{
+  margin: 1em 0;
+}
+
+.recent-entries-item:first-child,
+.related-entried-item:first-child{
+  padding-top: 20px;
+}
+
+.recent-entries-item-inner,
+.related-entries-item-inner{
+  margin-bottom: 0;
+}
+
+
+/* 外枠をカード風に */
+.recent-entries-item-inner,
+.related-entries-item-inner {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 0.6em;
+  margin-bottom: 0.8em;
+  overflow: hidden; /* float対策 */
+}
+
+/* サムネイル画像を左に */
+.recent-entries-image-link,
+.related-entries-image-link {
+  float: left;
+  width: 120px;
+  height: auto;
+  margin: 0.5em 0.8em 0 0;
+}
+.recent-entries-image,
+.related-entries-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+/* テキスト整形 */
+.recent-entries-date-link,
+.related-entries-date-link {
+  font-size: 0.75em;
+  color: #888;
+  margin-bottom: 0.2em;
+  display: block;
+}
+.recent-entries-title-link,
+.related-entries-title-link {
+  font-size: 0.85em;
+  font-weight: bold;
+  color: #101820;
+  text-decoration: none;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.recent-entries-title-link:hover,
+.related-entries-title-link:hover {
+  color: #D7A22A;
+}
+
+.recent-entries-date-link,
+.related-entries-date-link {
+  display: inline-block;
+  background-color: #101820;
+  color: #fff;
+  font-size: 0.75em; /* 少し小さめ */
+  font-family: 'Anton', sans-serif;
+  padding: 0.1em 0.6em 0.1em 0.4em;
+  margin-bottom: 0;
+  border-radius: 2px;
+  transition: 0.3s;
+}
+
+.recent-entries-date-link a,
+.related-entries-date-link a {
+  color: #fff;
+  text-decoration: none;
+}
+
+.recent-entries-date-link a:hover,
+.related-entries-date-link a:hover {
+  color: #D7A22A;
+}
+
+
+/* #endregion */
+
+/* #region スタッツテーブル */
+.stats-table-wrapper {
+  display: block;
+  overflow-x: auto;
+  width: fit-content;
+  margin: 1.5em 0;
+  border-radius: 8px;
+  box-shadow: 4px 4px 0 #006778, -4px -4px #d7a22a;
+  max-width: 100%;
+}
+
+.stats-table {
+  width: auto;
+  table-layout: auto;
+  border-collapse: collapse;
+  border-spacing: 0;
+  font-size: 0.95em;
+  margin: 0;
+  table-layout: auto;
+  white-space: nowrap
+}
+
+.stats-table th,
+.stats-table td {
+  width: fit-content;
+  padding: 0.3em 0.5em;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.stats-table th {
+  background-color: #006778;
+  color: white;
+  box-shadow: inset -1px -1px #d7a22a;
+  min-width: 50px;
+}
+
+.stats-table td {
+  background-color: #fefcf5;
+  color: #101820;
+}
+
+.stats-table thead th{
+  position: sticky;
+  top: 0;
+  z-index: 3;
+}
+
+.stats-table tbody th{
+  position: sticky;
+  left: 0;
+  z-index: 2;
+}
+
+.stats-table thead th:first-child {
+  left: 0;
+  z-index: 4;
+}
+
+.stats-table .highlight {
+  background-color: #FFF100;
+  font-weight: bold;
+  color: #101820;
+  box-shadow: inset 0 -0.3em 0 #d7a22a;
+}
+
+/* #endregion */
+
+/* #region テーブルを横スクロールコード */
+.scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  white-space: nowrap;
+  padding-bottom: 0.5em;
+}
+
+.scroll table {
+  margin: 0;
+  border-collapse: collapse;
+}
+
+.scroll::-webkit-scrollbar {
+  height: 6px;
+}
+
+.scroll::-webkit-scrollbar-track {
+  background: #eee;
+  border-radius: 4px;
+}
+
+.scroll::-webkit-scrollbar-thumb {
+  background: #006778;
+  border-radius: 4px;
+  transition: background 0.3s;
+}
+
+.scroll::-webkit-scrollbar-thumb:hover {
+  background: #004c5c;
+}
+
+/* #endregion */
+
+/* #region 記事タイトル */
+h1.entry-title{
+  background-color: #101820;
+  color: #fff;
+  box-shadow: 5px 5px 0 #D7A22A, -5px -5px 0 #006778;
+  padding: 0.5em 0.5em;
+  font-family: 'Anton', sans-serif;
+  font-weight: 500;
+  transition: 0.3s;
+}
+
+h1.entry-title a:hover{
+  color: #D7A22A;
+}
+
+@media screen and (max-width: 480px){
+  h1.entry-title{
+    font-size: 1.5rem;
+    line-height: 1.4;
+  }
+}
+/* #endregion */
+
+/*#region 見出し*/
+h3, h4, h5, .search-result h2,
+h2.archive-heading,
+.hatena-module-title{
+  display: block;
+  width: fit-content;
+  position: relative;
+  color: #fff !important;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-weight: 800;
+}
+
+/* #region 大見出し (h3) + 検索結果見出し  */
+h3,
+.search-result h2,
+h2.archive-heading {
+  font-size: 1.5em;
+  margin: 0.5em 0.2em !important;
+  padding: 0.8em 1em;
+  text-shadow: 2px 2px 0 #000;
+  z-index: 3;
+}
+
+h3::before,
+.search-result h2::before,
+h2.archive-heading::before,
+h3::after,
+.search-result h2::after,
+h2.archive-heading::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: -1;
+  clip-path: polygon(2.5% 14%, 92% 1%, 95% 92%, 1% 73%);
+}
+
+h3::before,
+.search-result h2::before,
+h2.archive-heading::before {
+  background: #D7a22a;
+  opacity: 0.9;
+  transform: translate(5px, 6px)
+  rotate(-2.5deg);
+  z-index: -3;
+}
+
+h3::after,
+.search-result h2::after,
+h2.archive-heading::after {
+  background: #006778;
+  opacity: 0.9;
+  transform: translate(4px, 4px) rotate(0deg);
+  z-index: -2;
+}
+
+h3,
+.search-result h2,
+h2.archive-heading {
+  background: #101820;
+  clip-path:polygon(2% 10%, 97% 0%, 100% 100%, 0% 88%);
+}
+
+@media screen and (max-width: 480px) {
+  h3{
+    font-size: 1.3em;
+  }
+}
+/* #endregion */
+
+/* #region 中見出し (h4) + サイドバータイトル*/
+h4,
+.hatena-module-title { 
+  position: relative;
+  background: transparent;
+  /* margin: 0.5em 1em !important; */
+  text-shadow: 2px 2px 0 #101820;
+  font-size: 1.2em;
+  padding: 0.5em 1.2em;
+  z-index: 1;
+}
+
+h4::before,
+.hatena-module-title::before { 
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #101820;
+  clip-path: polygon(2% 10%, 98% 0%,100% 90%, 0% 95%);
+  z-index: -2;
+}
+
+h4::after,
+.hatena-module-title::after { 
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -10px;
+  width: calc(100% + 20px);
+  height: 50%;
+  background: #006778;
+  border-bottom: 3px solid #D7A22A;
+  transform: translateY(-50%) rotate(-1deg);
+  z-index: -1;
+  clip-path: polygon(1.5% 20%, 100% 0%, 98% 100%, 0% 85%);
+  opacity: 0.8;
+}
+
+.hatena-module-title a:hover{
+  color: #D7A22A;
+}
+
+@media (max-width: 768px) {
+  h4,
+  .hatena-module-title{
+      padding: 0.7em 1em;
+  }
+  /* h4::before,
+  .hatena-module-title::before{
+      clip-path: polygon(5% 10%, 95% 0%,97% 90%, 3% 95%);
+  } */
+}
+/* #endregion */
+
+/* #region 小見出し (h5) */
+h5 { 
+  background: transparent;
+  margin: 0.5em 1em !important;
+  font-size: 1.1em;
+  text-shadow: 2px 2px 0 #101820;
+  padding: 0.5em 1em;
+  z-index: 1;
+}
+
+h5::before { 
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #006778;
+  clip-path: polygon(0% 5%, 99% 0%,97% 100%, 2% 100%);
+  transform: rotate(1deg);
+  z-index: -3;
+}
+
+h5::after { 
+  content: '';
+  position: absolute;
+  bottom: -15px;
+  Right: -70px;
+  width: 180px;
+  height: 60px;
+  background: #d7a22a;
+  transform: translateX(0) rotate(230deg);
+  z-index: -1;
+  clip-path: polygon(49% 30%, 51% 25%, 57% 100%, 43% 100%);
+}
+/* #endregion */
+/* #endregion */
+
+/* #region カテゴリー説明文 */
+.archive-description {
+  display: block;
+  width: fit-content;
+  position: relative;
+  color: #fff;
+  font-size: 16px;
+  margin: 0.5em 0.2em;
+  padding: 0.8em 1em;
+  z-index: 3;
+}
+
+.archive-description::before,
+.archive-description::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: -1;
+  clip-path: polygon(0% 5%, 97% 4%, 97% 90%, 0.5% 89%);
+}
+
+.archive-description::before {
+  background: #d7a22a;
+  opacity: 0.9;
+  transform: translate(5px, 6px)
+  rotate(1.5deg);
+  z-index: -3;
+}
+
+.archive-description::after {
+  background: #101820;
+  opacity: 0.9;
+  transform: translate(4px, 4px) rotate(0deg);
+  z-index: -2;
+}
+
+.archive-description {
+  background: #006778;
+  clip-path:polygon(0% 2%, 100% 4%, 98% 98%, 1% 100%);
+}
+/* #endregion */
+
+/* #region 記事作成日 */
+.date{
+  color: #fff;
+  font-size: 0.875em;
+  margin-bottom: 7px;
+  background-color: #101820;
+  display: inline-block;
+  padding: 0.2em 1em 0.2em 0.5em;
+  font-family: 'Anton', sans-serif;
+  transition: 0.3s;
+}
+
+.date a:hover{
+  color: #D7A22A;
+}
+/* #endregion */
+
+/* #region カテゴリー、続きを読む、コメント、次のページ・前のページなどボタン */
+.entry-content .entry-see-more,
+.categories a,
+.comment-box .leave-comment-title,
+.hatena-module-custom-categories.hatena-module-category .hatena-module-body .hatena-urllist a,
+.pager-next a, .pager-prev a{
+  background-color: #101820;
+  color: #fff;
+  border: none;
+  transition: background 0.3s, color 0.3s;
+  /* font-family: 'Anton', sans-serif; */
+  font-weight: 500;
+  font-size: 1em;
+}
+
+.hatena-module-custom-categories.hatena-module-category .hatena-module-body .hatena-urllist a{
+  display: block;
+  padding: 0 12px;
+  line-height: 32px;
+}
+
+.entry-content .entry-see-more:hover,
+.categories a:hover,
+.comment-box .leave-comment-title:hover,
+.hatena-module-custom-categories.hatena-module-category .hatena-module-body .hatena-urllist a:hover,
+.pager-next a:hover, .pager-prev a:hover{
+  background-color: #D7A22A;
+  color: #101820;
+  /* border-radius: 0;
+  font-size: 1em; */
+}
+
+.pager-next a,
+.pager-prev a {
+  display: -webkit-box;
+  -webkit-line-clamp: 1; /* 1行に制限 */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 3;
+  text-decoration: none;
+  text-align: center;
+  padding: 0 0.5em;
+}
+
+.pager-next::before,
+.pager-prev::before{
+  text-transform: uppercase;
+  color: #006778;
+  display: block;
+  font-size: 1.5em;
+  margin-bottom: 3px;
+  font-family: 'Anton', sans-serif;
+}
+
+/* #endregion */
+
+/* #region タグ */
+
+.entry-tags,
+.archive-entry-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em;
+}
+
+.entry-tag,
+.archive-entry-tag{
+  /* font-family: 'Anton', sans-serif; */
+  font-size: 1em;
+  font-weight: bold;
+}
+
+/* タグリンク基本 */
+.entry-tag .entry-tag-link,
+.archive-entry-tag .archive-entry-tag-link {
+  display: block;
+  background-color: #d7a22a;
+  color: #101820;
+  text-decoration: none;
+  border: none;
+  padding: 0 12px;
+  line-height: 32px;
+  border-radius: 4px;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/* タグアイコン */
+.entry-tag-icon,
+.archive-entry-tag-icon {
+  color: transparent;
+  position: relative;
+}
+
+.entry-tag-icon::before,
+.archive-entry-tag-icon::before {
+  content: "\f02b"; /* Font Awesome タグアイコン */
+  font-family: "Font Awesome 5 Free";
+  font-weight: 900;
+  color: #101820;
+}
+
+/* ホバー時：リンクとアイコンを一緒に変化 */
+.entry-tag .entry-tag-link:hover,
+.archive-entry-tag .archive-entry-tag-link:hover {
+  background-color: #101820;
+  color: #fff;
+}
+
+.entry-tag .entry-tag-link:hover .entry-tag-icon::before,
+.archive-entry-tag .archive-entry-tag-link:hover .archive-entry-tag-icon::before {
+  color: #fff;
+}
+
+/* #endregion */
+
+/* #region 目次（PCのみ） */
+
+/* === トグルブロック（PCのみ）=== */
+.toc-toggle-block {
+  margin: 2em 0.5em -0.7em;
+  /* font-family: 'Anton', sans-serif; */
+  position: relative;
+  z-index: 10;
+}
+
+/* ラベルスタイル（PCのみ） */
+.toc-label {
+  display: inline-block;
+  background-color: #D7A22A;
+  color: #101820;
+  padding: 0.2em 0.7em;
+  margin-left: 1em;
+  font-size: 1.2em;
+  /* font-family: 'Anton', sans-serif; */
+  transform: rotate(0deg);
+  transform-origin: left center;
+  box-shadow: 2px 2px 0 #101820;
+  border-radius: 6px;
+  cursor: pointer;
+  z-index: 10;
+  margin-bottom: 0.3em;
+  transition: transform 0.3s ease, margin-bottom 0.3s ease;
+}
+
+.toc-label.open{
+  transform: rotate(-5deg);
+  margin-bottom: -0.7em;
+}
+
+.toc-label .toc-icon {
+  display: inline-block;
+  transition: transform 0.3s ease;
+}
+
+.toc-label.open .toc-icon {
+  transform: rotate(90deg);
+}
+
+/* === 展開時の目次アニメーション（PC）=== */
+.table-of-contents {
+  display: none;
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-10px);
+  padding: 0;
+  margin: 0;
+  border-top: none !important;
+  border-right: none !important;
+  border-bottom: none !important;
+  border-left: 4px solid transparent;  
+  z-index: 1;
+  background: #101820;
+  color: #fff;
+  border-radius: 10px;
+  box-shadow: 4px 4px 0 #006778;
+  /* font-family: 'Anton', sans-serif; */
+  overflow: hidden;
+  position: relative;
+  transition:
+  max-height 0.4s ease,
+  opacity 0.4s ease,
+  transform 0.4s ease,
+  padding 0.4s ease,
+  margin 0.4s ease;
+}
+
+.table-of-contents.animate{
+  display: block;
+  max-height: 1000px;
+  opacity: 1;
+  transform: translateY(0);
+  padding: 1em 1.5em 1em;
+  margin: 0 0.5em 1em;
+  border-left: 4px solid #d7a22a;
+}
+
+/* === リスト・リンク装飾 === */
+.table-of-contents li{
+  list-style: none;
+  margin: 0.4em 0;
+  position: relative;
+  padding-left: 1.5em;
+}
+
+.table-of-contents li::before{
+  content: '▶';
+  position: absolute;
+  left: 0;
+  color: #d7a22a;
+  transform: rotate(-15deg);
+  font-size: 0.8em;
+}
+
+.table-of-contents li ul li{
+  margin-left: -1.5em;
+}
+
+/* リスト内リンクの装飾 */
+.table-of-contents a {
+  color: #fff;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.table-of-contents a:hover {
+  color: #D7A22A;
+  text-decoration: none;
+}
+
+/* === スマホ専用（透明）=== */
+@media (max-width: 768px) {
+  .table-of-contents {
+    display: none !important;
+  }
+
+  .toc-toggle-block {
+    display: none !important;
+  }
+}
+
+/* #endregion */
+
+/* 更新のお知らせ */
+.update dl{
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0;
+}
+
+.update dt{
+  box-sizing: border-box;
+  margin: 0 0 5px 0;
+  padding: 0 0 5px 5px;
+  width: 30%;
+  border-bottom: 0.5px solid #aaa;
+}
+
+.update dd{
+  box-sizing: border-box;
+  margin: 0 0 5px 0;
+  padding: 0 5px 5px 5px;
+  width: 70%;
+  border-bottom: 0.5px solid #aaa;
+}
+
+.update dt:first-child{
+  margin-top: 5px;
+}
+
+.update dd:first-of-type{
+  margin-top: 5px;
+}
+
+.update dt:last-of-type,
+.update dd:last-of-type{
+  border: none;
+}
+
+.update details[open] ul{
+  border: 2px solid #d7a22a;
+  border-top: none;
+  border-radius: 0 0 10px 0;
+}
+
+.update details[open] ul{
+  padding: 10px;
+  margin-left: 0px;
+}
+
+.update details[open] ul li{
+  list-style-type: none;
+  text-indent: -1.3em;
+  padding-left: 1.3em;
+
+}
+
+.update details[open] ul li:before{
+  content: "▶️ ";
+  color: #d7a22a;
+}
+/* 更新のお知らせ */
+
+/* 疑似要素でアイコンを表示 */
+summary:before,
+summary:after {
+  content: "";
+  margin: auto 0 auto 10px;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+}
+
+summary:before{
+  width: 20px;
+  height: 3px;
+  background-color: #fff;
+  border-radius: 3px;
+  transition: all 0.4s;
+}
+
+summary:after{
+  width: 20px;
+  height: 3px;
+  background-color: #fff;
+  border-radius: 3px;
+  transition: all 0.4s;
+  transform: rotate(-90deg);
+}
+
+/* オープン時のスタイル */
+details[open] summary {
+  background-color: #d7a22a;
+  border-radius: 10px 0 0 0;
+}
+
+details[open] dl{
+  border: 2px solid #d7a22a;
+  border-top: none;
+  border-radius: 0 0 10px 0;
+}
+
+details[open] summary:before {
+  opacity: 0;
+}
+
+details[open] summary:after {
+  transform: rotate(180deg); /* アイコンを回転 */
+}
+/* 折りたたみ */
+
+/* #region リード文 */
+.preface {
+  background-color: #f0fafa;
+  border-left: 4px solid #006778;
+  padding: 1.5em 1.5em 1em;
+  margin: 2em 0.5em 1.5em !important;
+  border-radius: 10px;
+  box-shadow: 4px 4px 0 #D7A22A;
+  line-height: 1.8;
+  position: relative;
+  color: #101820;
+}
+
+.preface::before {
+  content: "Intro";
+  position: absolute;
+  top: -0.8em;
+  left: 0.7em;
+  background-color: #006778;
+  color: #fff;
+  padding: 0.1em 0.6em;
+  font-family: 'Anton', sans-serif;
+  font-size: 1.2em;
+  transform: rotate(-5deg);
+  box-shadow: 2px 2px 0 #000;
+  border-radius: 6px;
+  z-index: 1;
+}
+
+@media (max-width: 480px) {
+  .preface {
+    margin: 2em 0.5em 1em !important; /* ← 上に十分なスペースを！ */
+    padding: 1.5em 1em 1em;
+  }
+
+  .preface::before {
+    font-size: 1em;
+  }
+}
+/* #endregion */
+
+/* ↓↓Noticeボックス↓↓ */
+
+.notice-box {
+  background: #fefcf5;
+  border-left: 4px solid #D7A22A;
+  padding: 1.2em 1.5em;
+  border-radius: 10px;
+  box-shadow: 4px 4px 0 #006778;
+  line-height: 1.7;
+  margin: 2em 0.5em 1em;
+  color: #101820;
+  position: relative;
+}
+
+.notice-box::before {
+  content: "Notice";
+  position: absolute;
+  top: -1.2em;
+  left: 1em;
+  background: #d7a22a;
+  color: #101820;
+  font-size: 1em;
+  padding: 0.2em 0.6em;
+  font-family: 'Anton', sans-serif;
+  border-radius: 6px;
+  transform: rotate(-5deg);
+  box-shadow: 2px 2px 0 #000;
+}
+
+@media (max-width: 480px) {
+  .notice-box {
+    padding: 1.5em 1em 1em;
+  }
+}
+/* ↑↑Noticeボックス↑↑ */
+
+/* ↓↓Info↓↓ */
+.info{
+  border-left: 4px solid #006778;
+  background-color: #f0fafa;
+  border-radius: 10px;
+  padding: 0.5em;
+}
+
+.info a {
+	--arrow-color:#006778; /* 矢印の色を設定 */
+	position: relative; /* 疑似要素を位置指定するための基準 */
+	padding: 0 1.5em .3em .3em; /* 内側の余白（右に矢印部分を空ける） */
+	color: var(--arrow-color); /* 文字色を矢印の色と統一 */
+	text-decoration: none; /* 下線を非表示 */
+  overflow: hidden;
+  transition: 0.3s;
+}
+
+.info a::before {
+	border-bottom: 1.5px solid var(--arrow-color); /* 下線としての矢印部分 */
+	border-right: 2px solid var(--arrow-color); /* 右線としての矢印部分 */
+	bottom: 0; /* 矢印をボタン下部に配置 */
+	content: ''; /* 疑似要素でコンテンツを空に設定 */
+	height: 12px; /* 矢印の高さ */
+	position: absolute; /* 親要素から相対的に配置 */
+	left: 0; /* 矢印の位置を左端に */
+	transform: skewX(50deg); /* 矢印の形状を傾けてデザイン */
+	width: 100%; /* ボタン全体の幅に矢印を合わせる */
+	transition: all .3s; /* なめらかな動き（ホバー時） */
+}
+
+/* マウスオーバー時の動き */
+.info a:hover::before {
+	left: 5%; /* ホバー時、矢印が右に10%ずれる */
+	border-bottom: 1.5px solid #d7a22a; /* 下線としての矢印部分 */
+	border-right: 2px solid #d7a22a; /* 右線としての矢印部分 */
+}
+
+.info a:hover{
+  color: #d7a22a;
+}
+
+/* ↑↑Info↑↑ */
+
+.series-box {
+  background: #f0fafa;
+  padding: 0.5em;
+  border-radius: 6px;
+  box-shadow: 4px 4px 0 #d7a22a, -4px -4px #006778;
+  position: relative;
+}
+
+.series-box ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.series-box li {
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  margin-bottom: 0.6em;
+  font-weight: bold;
+  line-height: 1.4;
+  flex-wrap: nowrap;
+}
+
+.series-box .series-label {
+  display: inline-block;
+  padding: 0.1em 0.3em;
+  font-size: 0.9em;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  box-shadow: 2px 2px 0 #000;
+  background: #006778;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+/* current状態 */
+.series-box .is-current .series-label {
+  transform: rotate(-7deg);
+  background: #d7a22a;
+  color: #101820;
+}
+
+/* ホバー時：バッジに連動 */
+.series-box li:not(.is-current):hover .series-label {
+  transform: rotate(-7deg);
+  background: #d7a22a;
+  color: #101820;
+}
+
+/* リンクスタイル */
+.series-box li a {
+  color: #006778;
+  text-decoration: none;
+  transition: color 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+}
+
+.series-box li a:hover {
+  color: #d7a22a;
+}
+
+.series-box li a,
+.series-box .is-current {
+  overflow-wrap: anywhere; /* ← 長文対応 */
+  word-break: break-word;
+  flex: 1; /* ← バッジ以外を自動で伸縮 */
+  min-width: 0; /* ← flex item の縮小制限解除 */
+}
+
+/* current行の背景 */
+.series-box .is-current {
+  background-color: #fff7e0;
+  border-radius: 6px;
+  color: #101820;
+  padding: 0.3em 0.5em;
+}
+
+/* #region 選手情報 */
+
+/* <dl> 全体のスタイル */
+.player-info dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0px 12px; /* 間を詰める */
+  padding: 8px;
+}
+
+/* <dt> と <dd> のセットを整列 */
+.player-info dt,
+.player-info dd {
+  margin: 0;
+  padding: 10px 0;
+  display: flex;
+  align-items: flex-start; /* ← 上揃えに変更 */
+  position: relative;
+}
+
+/* <dd> にのみ仕切り線を適用（<dt> の下には線を入れない） */
+.player-info dd {
+  text-align: left;
+  flex: 1;
+  border-bottom: 1px solid rgba(16, 24, 32, 0.2);
+}
+
+/* 最後の <dd> のボーダーを削除（最後の仕切り線を消す） */
+.player-info dd:last-of-type {
+  border-bottom: none;
+}
+
+/* <dt> のスタイル */
+.player-info dt {
+  font-weight: bold; /* ラベルを強調 */
+  text-align: right;
+  padding-right: 8px; /* <dd> との間を適度に空ける */
+}
+ 
+/* 成績の表を整列 */
+.player-info dd.grades {
+  display: grid;
+  grid-template-columns: max-content min-content; /* ラベルと数値を最適な幅で配置 */
+  gap: 2px 8px;
+  align-items: start;
+}
+
+/* 成績のラベル（Offense:, Pass:, Run:） */
+.player-info dd.grades span {
+  display: inline-block;
+  white-space: nowrap; /* 折り返し防止 */
+}
+
+/* 成績の数値 */
+.player-info dd.grades strong {
+  display: inline-block;
+  white-space: nowrap; /* 折り返し防止 */
+}
+
+/* <dl> の背景とデザイン */
+.player-info {
+  background-color: #f0fafa;
+  padding-left: 5px;
+  border-radius: 8px;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  box-shadow: 4px 4px 0 #d7a22a, -4px -4px 0 #006778;
+  
+}
+
+/* スコアバッジ（PFF Grade） */
+.pff-grade {
+  display: inline-block;
+  text-align: center;
+  padding: 2px 6px;
+  border-radius: 6px;
+  color: #ffffff;
+  font-weight: bold;
+}
+
+/* チームバッジ */
+.team-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 0.9em;
+  background-color: var(--team-color1, #006778);
+  color: var(--team-color2, #d7a22a);
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* #endregion */
+
+/* #region 検索セクション */
+#roster-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em 1em;
+  padding: 0.2em 0.2em 0.5em 0.2em;
+  background-color: #f0fafa;
+  border-radius: 10px;
+  box-shadow: 4px 4px 0 #D7A22A, -4px -4px 0 #006778;
+  justify-content: flex-start;
+  margin-bottom: 2em;
+  max-width: 100%;
+   font-family: 'Anton', sans-serif;
+}
+
+/* 全入力共通 */
+#roster-controls input[type="text"],
+#roster-controls select {
+  padding: 0.5em 0.8em;
+  border: none;
+  border-radius: 6px;
+  background-color: #101820;
+  color: #ffffff;
+  font-size: 14px;
+  /* font-weight: bold; */
+  box-shadow: 2px 2px #d7a22a, -2px -2px #006778;
+  min-width: 120px;
+  max-width: 180px;
+}
+
+/* プレースホルダー文字 */
+#roster-controls input::placeholder {
+  color: #999;
+}
+
+.sort-toggle {
+  background-color: #006778;
+  color: #fff;
+  border: none;
+  /* padding: 6px 10px; */
+  margin-left: 0.5em;
+  font-size: 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  box-shadow: 2px 2px #d7a22a;
+  transition: all 0.3s ease;
+  position: relative;
+  width: 36px;
+  height: 36px;
+}
+
+.sort-toggle::before {
+  font-family: "FontAwesome";
+  font-weight: 900;
+  font-size: 18px;
+  content: "\f0de"; /* ▲ fa-sort-amount-up-alt */
+  display: inline-block;
+  transition: transform 0.3s ease;
+}
+
+.sort-toggle[data-dir="desc"]::before {
+  content: "\f0dd"; /* ▼ fa-sort-amount-down-alt */
+}
+
+.filter-group {
+  padding: 0 0 0 0.5em;
+}
+
+.filter-title {
+  color: #101820;
+  border-bottom: 2px solid #d7a22a;
+  margin: 0.3em;
+}
+
+#roster-controls .legend-box {
+  margin: 0;
+  overflow: hidden;
+}
+
+#roster-controls .legend-header {
+  font-weight: normal;
+  font-size: 0.9em;
+  padding: 0.3em 0 0 0; 
+  cursor: pointer;
+  background-color: transparent;
+  color: #101820;
+  transition: background 0.3s, color 0.3s;
+  border-radius: 0;
+}
+
+#roster-controls .legend-content {
+  max-height: 0;
+  opacity: 0;
+  margin-bottom: 0;
+  transition: max-height 0.4s ease, opacity 0.4s ease, margin 0.4s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6em;
+  border: none;
+  font-size: 1em;
+  padding: 0.2em;
+}
+
+/* #region Advanced Filter展開  */
+#roster-controls .legend-header::after {
+  font-family: "FontAwesome";
+  content: "\f0d7"; /* ▼ */
+  margin-left: 0.3em;
+  font-size: 1em;
+  display: inline-block;
+  transition: transform 0.3s ease;
+}
+
+#roster-controls .legend-box[aria-expanded="true"] .legend-header::after {
+  transform: scaleY(-1);
+}
+/* #endregion */
+
+/* #region チェックボックス */
+#roster-controls .checkbox input {
+  position: absolute;
+  left: -9999px;
+}
+
+#roster-controls .checkbox label {
+  display: block;
+  position: relative;
+  padding: 0px 10px 0px 25px;
+  width: fit-content;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 0.9em;
+  background-color: #999;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition: all .2s ease;
+}
+
+#roster-controls .checkbox label::before {
+  content: '';
+  display: block;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  left: 7px;
+  width: 7px;
+  height: 7px;
+  border: 3px solid #fff;
+  border-radius: 100px;
+  transition: all .2s ease;
+}
+
+#roster-controls .checkbox input:checked + label {
+  background-color: #101820;
+  box-shadow: 2px 2px #d7a22a, -2px -2px #006778;
+}
+
+#roster-controls .checkbox input:checked + label::before {
+  background-color: #d7a22a;
+  border: 3px solid #d7a22a;
+}
+/* #endregion */
+
+@media screen and (max-width: 600px) {
+  #roster-controls {
+    flex-direction: column;
+  }
+
+  #roster-controls input,
+  #roster-controls select {
+    max-width: 100%;
+  }
+}
+/* #endregion */
+
+/* #region ==Roster== */
+/* タブ */
+.roster__section {
+  width: 100%;
+  margin-bottom: 1.5em;
+  padding: 1em 0;
+}
+
+.roster__tabs{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.5em;
+  width: 100%;
+  margin: 0 auto;
+}
+
+a.roster__tab {
+  display: block;
+  text-align: center;
+  padding: 8px 0;
+  background-color: #101820;
+  color: #fff;
+  box-shadow: 2px 2px #d7a22a, -2px -2px #006778;
+  transition: all 0.3s;
+  font-family: 'Anton',sans-selif;
+  text-decoration: none;
+}
+
+a.roster__tab:hover{
+  background-color: #d7a22a;
+  color: #101820;
+}
+
+/* 選手リスト共通 */
+.player-list {
+  list-style: none;
+  padding:0 ;
+  margin: 0.5em;
+  position: relative;
+  z-index: 5;
+ 
+}
+
+.player-list li.player-fa,
+.player-list li.player-draft,
+.player-list li.player-out
+ {
+  display: block;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.player-toggle {
+  padding: 1em 2em 0.5em;
+  margin: 1.5em 0;
+  cursor: pointer;
+  position: relative;
+}
+
+.player-main {
+  font-size: 16px;
+}
+
+/* player-mainはflexboxを使用 */
+.player-main {
+  display: flex;
+  flex-wrap: wrap;         /* 横に並べきれない場合は改行 */
+  gap: 5px;
+}
+
+
+.player-sub {
+  font-size: 13px;
+  font-weight: normal;
+  margin-top: 8px;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.5s ease, opacity 0.5s ease;
+  opacity: 0;
+}
+
+/* 年数（player-year）色切替 */
+/* .player-fa .player-year {
+  color: #006778;
+}
+.player-draft .player-year,
+.player-out .player-year,
+.player-injury .player-year {
+  color: #d7a22a;
+} */
+
+/* 左ボーダーカラー（生え抜き/外部） */
+.player-list li.player-fa {
+  border-left: 5px solid #cccccc;
+}
+.player-list li.player-draft {
+  border-left: 5px solid #d7a22a;
+}
+
+/* 背景別カラー（ステータス） */
+.player-list li.player-active {
+  background-color: #006778; /* Active = 緑系 */
+  color: white;
+}
+.player-list li.player-ir,
+.player-list li.player-pup,
+.player-list li.player-nfi {
+  background-color: #e57373; /* IR系 = 赤系 */
+  color: white;
+}
+.player-list li.player-susp {
+  background-color: #ff0000; /* Suspended = 真っ赤 */
+  color: white;
+}
+.player-list li.player-ps {
+  background-color: #1976d2; /* Practice Squad = 青系 */
+  color: white;
+}
+.player-list li.player-eip {
+  background-color: #388e3c; /* Exempt/International = 緑濃いめ */
+  color: white;
+}
+.player-list li.player-out {
+  background-color: #101820; /* 退団済み = 黒グレー */
+  color: white;
+}
+
+/* 背番号 */
+.player-number {
+  position: absolute;
+  top: -1em;
+  left: 0.2em;
+  background: #101820;
+  color: white;
+  font-size: 16px;
+  font-weight: normal;
+  padding: 4px 4px;
+  border-radius: 4px;
+  transform: rotate(5deg);
+  font-family: 'Anton', sans-selif;
+}
+
+/* #region ステータスバッジ */
+.badge-ir,
+.badge-pup,
+.badge-nfi,
+.badge-susp,
+.badge-ps,
+.badge-eip {
+  position: absolute;
+  top: -1.5em;
+  right: 1em; /* 最初のバッジ */
+  font-size: 14px;
+  padding: 2px 6px 0px;
+  border-radius: 4px 4px 0 0;
+  background: #E57373; /* IRなら赤、PSなどは個別にCSS上で制御 */
+  color: white;
+  font-family: 'Anton', sans-seif;
+  font-weight: normal;
+  z-index: -1;
+}
+
+.badge-susp {
+  right: 3.7em; /* IRの左に配置 */
+  background: #FF0000;
+}
+
+.badge-ps {
+  right: 6.9em; /* SUSPの左に配置 */
+  background: #1976D2;
+}
+
+.badge-eip {
+  right: 9.2em; /* PSの左に配置 */
+  background: #388E3C;
+}
+
+.badge-sub {
+  position: absolute;
+  top: -1em;
+  left: 3em;
+  background: #101820;
+  color: white;
+  font-size: 14px;
+  font-weight: normal;
+  padding: 4px 4px;
+  border-radius: 4px;
+  transform: rotate(-3deg);
+  font-family: 'Anton', sans-selif;
+}
+/* #endregion */
+
+/* #region キャリアバッジ */
+
+.badge-career {
+  position: absolute;
+  top: 40%;
+  left: -1em;
+  color: #fff;
+  font-size: 16px;
+  font-weight: normal;
+  padding: 0 4px;
+  border-radius: 4px;
+  font-family: 'Anton', sans-selif;
+  animation: bounce 1.5s infinite;
+}
+
+@keyframes bounce {
+  0% {
+    transform: translateY(0) rotate(-5deg); /* 初期位置 */
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1); /* 最初は速く */
+  }
+  50% {
+    transform: translateY(3px) rotate(-5deg); 
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1); /* 頂点で減速 */
+  }
+  100% {
+    transform: translateY(0) rotate(-5deg); /* 最後は元の位置に戻る */
+  }
+}
+
+.badge-draft {
+  background-color: #ff0000; 
+}
+
+.badge-udfa {
+  background-color: #F57C00;
+}
+
+.badge-fa, .badge-waiver, .badge-trade {
+  background-color: #1976D2;  
+}
+
+/* #endregion */
+
+.player-stats ul{
+  margin: 0 0 0 1em;
+}
+
+/* Combine と Stats 行両方に適用 */
+.player-combine.info-line,
+.player-stats li.info-line {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  column-gap: 0.5em;    /* ラベル⇔値 の隙間 */
+  row-gap: 0.25em;      /* 折り返し時の上下隙間 */
+  margin-bottom: 0.5em;
+}
+
+/* 大見出しラベル (Combine:, General:, など)
+/* .player-combine.info-line > strong,
+.player-stats li.info-line > strong { 
+} */
+
+/* 値部分は自動折り返し */
+.player-combine.info-line > .value,
+.player-stats li.info-line > .value {
+  grid-column: 2;
+  white-space: normal;
+  word-break: break-word;
+}
+
+/* 小項目ラベル (40yd:, GP:, etc.) のマージン調整 */
+.player-combine.info-line .value > strong,
+.player-stats li.info-line .value > strong {
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+
+
+/* #endregion ==Roster== */
+
+
+.roster caption{
+  font-size: 1.2em;
+  font-weight: bold;
+  text-align: left;
+}
+
+.roster table{
+  border-collapse: separate;
+  font-size: 1rem;
+}
+
+.roster table thead tr{
+  background-color: #006778;
+  color: white;
+  text-align: left;
+}
+
+.roster th{
+  position: sticky;
+  top: 0;
+  left: 0;
+}
+
+.roster tr:first-child th:first-child{
+  z-index: 1;
+}
+
+.roster table thead th:first-child{
+  background-color: #006778;
+}
+
+.roster table tbody th{
+  background-color: #ededed;
+}
+
+.roster th, .roster td{
+  padding: 0.2em 1em;
+  border: solid 0.5px #e6e6e6;
+}
+
+table.RosterName{
+  border-collapse: collapse;
+  border: #000000 solid 2px;
+  width: auto;
+  max-width: 400px;
+  min-width: 300px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+table.RosterName thead tr{
+  background-color: #006778;
+  color: white;
+  text-align: left;
+}
+
+table.RosterName th,
+table.RosterName td{
+  padding: 2px 5px;
+}
+
+table.RosterName th.Num,
+table.RosterName td.Num{
+  text-align: center;
+}
+
+table.RosterName th.Name,
+table.RosterName td.Name{
+  font-weight: bold;
+}
+
+table.RosterName td.ir{
+  background-color: #5e5e5e;
+  color: white;
+  font-weight: bold;
+  text-align: center;
+}
+
+table.RosterName td.ps{
+  background-color: #fff056;
+  font-weight: bold;
+  text-align: center;
+}
+
+table.RosterName td.cut{
+  background-color: #ff968d;
+  font-weight: bold;
+  text-align: center;
+}
+
+/* 契約 */
+.contract td:nth-child(2n+1){
+  background-color: #FFF100;
+}
+
+/* 長所・短所 */
+.procon dl dt{
+  border-bottom: 1px solid #006778;
+}
+
+.procon dl dd{
+  margin-bottom: 0.4em;
+  text-indent: -1.3em;
+  padding-left: 1.3em;
+}
+
+.procon dl dd:last-child{
+  margin-bottom: 0.75em;
+}
+
+.procon dl dt:before{
+  font-family: "Font Awesome 5 Free";
+  content: "\f0da" " ";
+  color: #006778;
+}
+
+.procon dl dd:before{
+  content: "▶︎ ";
+  color: #006778;
+}
+/* 長所・短所 */
+
+/* ※ */
+p.kome{
+  text-indent: -1em;
+  padding-left: 1em;
+}
+p.kome::before{
+  content: "※";
+  color: #006778;
+}
+/* ※ */
+
+.history th,td{
+  padding: 0.2em;
+}
+
+/* #region Q&A */
+.qa-block, .dialogue-block {
+  margin: 1em auto;
+  padding: 0.5em 1em;
+  max-width: 700px;
+  background-color: #eeeeee;
+  border: 2px solid #006778;
+  border-radius: 10px;
+  box-shadow: 4px 4px 0 #D7A22A;
+  box-sizing: border-box;
+  overflow-wrap: break-word;
+  margin: 1em 0.5em;
+}
+
+.qa-block .q,
+.qa-block .a {
+  position: relative;
+  margin: 0.5em 0;
+  padding-left: 3.5em;
+} 
+
+.qa-icon {
+  position: absolute;
+  left: 0.1em;
+  top: -0.5em;
+  background: #101820;
+  color: #ffffff;
+  font-weight: 500;
+  font-size: 1.5em;
+  padding: 0.1em 0.5em;
+  border-radius: 6px;
+  transform: rotate(-5deg);
+  box-shadow: 2px 2px 0 #000;
+  font-family: 'Impact', sans-serif;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.qa-number{
+  position: absolute;
+  left: 2.3em;
+  top: -1em;
+  background-color: #101820;
+  padding: 0.2em 0.4em;
+  font-size:1em;
+  color: #fff;
+  font-family: 'Impact', sans-serif; 
+  transform: rotate(5deg);
+  clip-path: polygon(0 5%, 100% 0, 95% 100%, 5% 95%);
+}
+
+.qa-author{
+  position: absolute;
+  left: 2.3em;
+  top: -1em;
+  background-color: #101820;
+  padding: 0.2em 0.4em;
+  font-size:1em;
+  color: #fff;
+  font-family: 'Impact', sans-serif; 
+  transform: rotate(3deg);
+  clip-path: polygon(0 4%, 100% 1%, 96% 100%, 3% 94%);
+}
+
+.qa-block .q .qa-icon {
+  background: #006778;
+}
+
+.qa-block .a .qa-icon {
+  background: #D7A22A;
+  color: #101820;
+}
+
+.qa-block .q {
+  background: #f0fafa;
+  border-left: 4px solid #006778;
+  padding: 1em 1em 1em 3.5em;
+  border-radius: 6px;
+  font-weight: bold;
+  margin-bottom: 1em;
+}
+
+.qa-block .q a{
+  color: #d7a22a;
+  transition: 0.3s;
+}
+
+.qa-block .q a:hover{
+  color: #006778;
+}
+
+.qa-block .a {
+  background: #fffaf0;
+  border-left: 4px solid #D7A22A;
+  padding: 1em 1em 1em 3.5em;
+  border-radius: 6px;
+}
+
+/* #region 対談専用 */
+.dialogue-block .speaker-a {
+  position: relative;
+  background: #f0fafa;
+  border-left: 4px solid #006778;
+  padding: 1em;
+  border-radius: 6px;
+  margin-bottom: 1.5em;
+}
+
+.dialogue-block .speaker-a:first-child {
+  margin-top: 1em;
+}
+
+.dialogue-block .speaker-b:last-child{
+  margin-bottom: 0.5em;
+}
+
+.dialogue-block .speaker-b {
+  position: relative;
+  background: #fffaf0;
+  border-left: 4px solid #D7A22A;
+  padding: 1em;
+  border-radius: 6px;
+  margin-bottom: 1.5em;
+}
+
+.dialogue-author{
+  position: absolute;
+  left: -0.5em;
+  top: -0.8em;
+  background-color: #101820;
+  padding: 0.1em 0.4em;
+  font-size: 1em;
+  color: #fff;
+  font-family: 'Impact', sans-serif; 
+  transform: rotate(3deg);
+  clip-path: polygon(0 4%, 100% 1%, 96% 100%, 3% 94%);
+}
+
+.speaker-b .dialogue-author{
+  transform: rotate(-3deg);
+}
+/* #endregion */
+
+@media (max-width: 480px) {
+
+  .qa-block {
+    margin: 0.8em 0.5em;
+    padding: 0.5em;
+    max-width: 100%;
+    box-shadow: 2px 2px 0 #D7A22A;
+  }
+
+  .qa-block .q,
+  .qa-block .a {
+    padding-left: 2.3em;
+  }
+
+  .qa-icon {
+    font-size: 1.2em;
+    padding: 0.1em 0.4em;
+    font-family: 'Anton', sans-serif;
+  }
+
+  .qa-number,
+  .qa-author {
+    font-size: 0.9em;
+    left: 1.8em;
+    top: -1.2em;
+    font-family: 'Anton', sans-serif;
+  }
+}
+/* #endregion */
+
+.trade table th{
+  color: #fff;
+  text-align: center;
+  border: none;
+}
+
+.trade table td{
+  background-color: #ededed;
+  text-align: center;
+  border: none;
+}
+
+.trade table th:first-child, .trade table td:first-child{
+  border-right: solid 2px #fff;
+}
+
+.teamstats{
+  width: 100%;
+}
+
+.teamstats table th{
+  color: #fff;
+  text-align: center;
+  background-color: #3E3E3E;
+}
+
+.teamstats table td{
+  background-color: #fff!important;
+  text-align: center;
+}
+
+
+
+  
+/*↓----更新日時表示----↓*/
+.lastmod {
+background-color: transparent;
+padding: 5px 0px;
+text-decoration: none;
+font-size: 15px;
+display: inline;
+margin-left: 0px;
+color: #999;
+}
+.lastmod::before {
+margin-right: 5px;
+margin-left: 10px;
+padding-left: 3px;
+font-family: "Font Awesome 5 Free";
+font-weight: bold;
+content: '\f01e';
+}
+.entry-date a {
+background-color: transparent;
+padding: 5px 0px 5px 6px;
+text-decoration: none;
+font-size: 15px;
+display: inline;
+}
+.entry-date a::before {
+margin-right: 5px;
+padding-left: 3px;
+}
+/*↑----更新日時表示----↑*/
+
+/* #region トレードブロック */
+.trade-block {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1em;
+  max-width: 680px;
+  margin: 2em auto;
+  font-weight: bold;
+  color: #101820;
+  justify-content: center;
+}
+
+.trade-block .team-section {
+  flex: 1 1 40%;
+  min-width: 260px;
+  max-width: 320px;
+  width: fit-content;
+  border-left: 6px solid var(--team-color, #d7a22a);
+  background: var(--team-bg, #f8f8f8);
+  padding: 1em;
+  border-radius: 6px;
+  color: var(--team-text, #101820);
+}
+
+.trade-block .team-label {
+  font-weight: bold;
+  font-size: 16px;
+  margin-bottom: 0.5em;
+  background: var(--team-color, #d7a22a);
+  color: var(--team-label-text, #ffffff);
+  padding: 0.3em 0.8em;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.trade-block .team-section ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.trade-block .team-section li {
+  font-size: 16px;
+  margin-bottom: 0.3em;
+}
+
+/* 固定JAXスタイル */
+.trade-block .jax {
+  --team-color: #006778;
+  --team-bg: #e6f3f4;
+  --team-text: #d7a22a;
+  --team-label-text: #d7a22a;
+}
+
+/* スマホ対応（縦並び） */
+@media screen and (max-width: 600px) {
+  .trade-block {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .trade-block .team-section {
+    flex: 1 1 auto;
+    width: 100%;
+    max-width: 100%;
+  }
+}
+/* #endregion */
+
+/* #region 凡例ブロック全体 */
+.legend-box {
+  margin: 1.5em 0;
+}
+
+.legend-header {
+  background-color: #101820;
+  color: white;
+  padding: 0.5em;
+  font-weight: bold;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8em;
+  user-select: none;
+  cursor: pointer;
+}
+
+.legend-header:hover,
+.legend-box[aria-expanded="true"] .legend-header {
+  background-color: #D7A22A;
+  color: #101820;
+}
+
+.legend-box[aria-expanded="true"] .legend-header {
+  border-radius: 6px 6px 0 0;
+}
+
+.legend-content {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  margin-bottom: 0;
+  transition: max-height 0.4s ease, opacity 0.4s ease, margin 0.4s ease;
+  background-color: #f0fafa;
+  padding: 0 1.2em;
+  border: 2px solid #d7a22a;
+  border-top: none;
+  border-radius: 0 0 6px 6px;
+  font-size: 0.95em;
+  line-height: 1.7;
+}
+
+.legend-subtitle {
+  margin-top: 1em;
+  font-weight: bold;
+  color: #006778;
+}
+
+.legend-badges {
+  list-style: none;
+  padding-left: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em 1.5em;
+  margin-top: 0.5em;
+}
+
+.legend-box .player-toggle{
+  cursor: default;
+}
+
+.legend-content .badge-sample {
+  position: static !important;
+  display: inline-block;
+  margin-right: 0em;
+}
+
+.legend-note {
+  font-size: 0.9em;
+  font-weight: normal;
+}
+
+.legend-box p{
+  margin: 1em;
+}
+/* #endregion */
+
+  /* #region ==== スケジュールテーブル ==== */
+  /* #region メイン+PC */
+.schedule-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 2em 0;
+  font-family: 'Anton', sans-serif;
+  font-size: 15px;
+  background-color: #fff;
+  box-shadow: 4px 4px 0 #d7a22a, -4px -4px 0 #006778;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.schedule-table thead tr th{
+  background-color: #101820;
+  color: white;
+}
+
+.schedule-table th, .schedule-table td {
+  padding: 0.7em 0.6em;
+  text-align: center;
+  border: 1px solid #e0e0e0;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.schedule-table th[scope="row"] {
+  background-color: #fafafa;
+  text-align: center;
+}
+
+.schedule-table td {
+  color: #101820;
+}
+
+.schedule-table thead th{
+  position: sticky;
+  top: 0;
+  z-index: 3;
+}
+
+.schedule-table tbody th{
+  position: sticky;
+  left: 0;
+  z-index: 2;
+}
+
+.schedule-table thead th:first-child {
+  left: 0;
+  z-index: 4;
+}
+
+.schedule-table .team-badge{
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  font-size: 1em;
+  padding: 0 0.5em;
+}
+
+/* #region 勝敗+BYE+未実施試合+次試合の行色分け */
+.schedule-table tr.win {
+  background: #e6f7ea;
+}
+.schedule-table tr.loss {
+  background: #fbeaea;
+}
+.schedule-table tr.draw {
+  background: #eef0ff;
+}
+.schedule-table tr.upcoming {
+  background: #f5faff;
+}
+.schedule-table tr.bye th,
+.schedule-table tr.bye td {
+  background: #101820;
+  color: #fff;
+  border-right: none;
+  border-left: none;
+}
+.schedule-table tr.next-game {
+  background-color: #fff3cd !important;
+  font-weight: bold;
+  border-left: 4px solid #ffc107;
+}
+.schedule-table tr.next-game th[scope="row"] {
+  background-color: #fff3cd !important;
+}
+/* #endregion */
+
+/* #region Home/Away 文字色 */
+.schedule-table .venue.home {
+  color: #006778;
+}
+.schedule-table .venue.away {
+  color: #d7a22a;
+}
+/* #endregion */
+
+/* #region 勝敗の色 */
+.result.win  { color: #4CAF50; font-weight: bold; } /* 緑 */
+.result.loss { color: #F44336; font-weight: bold; } /* 赤 */
+.result.draw { color: #2196F3; font-weight: bold; } /* 青 */
+/* #endregion */
+/* #endregion */
+
+/* #region スマホ用 */
+.schedule-mobile {
+  width: fit-content;
+  margin: 0 auto;
+  padding-bottom: 1em;
+}
+
+.schedule-table.mobile-compact {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 auto;
+  font-size: 1em;
+}
+.schedule-table.mobile-compact th,
+.schedule-table.mobile-compact td {
+  text-align: center;
+  padding: 6px 8px;
+}
+
+@media screen and (max-width: 768px) {
+  .schedule-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 1em;
+  }
+
+  .schedule-table {
+    width: max-content;
+    max-width: 100%;
+  }
+
+  .schedule-table .venue.home,
+  .schedule-table .venue.away{
+    padding-right: 0.1em;
+  }  
+
+  .schedule-table .team-badge{
+    padding: 0 0.3em;
+  }
+}
+/* #endregion */
+
+/* #region PC/スマホ切り替え */
+@media screen and (max-width: 768px) {
+  .schedule-desktop { display: none; }
+  .schedule-mobile  { display: block; }
+}
+@media screen and (min-width: 769px) {
+  .schedule-desktop { display: block; }
+  .schedule-mobile  { display: none; }
+}
+/* #endregion */
+
+/* #region プレ/レギュラー切り替えタブ */
+.tab-buttons {
+  display: flex;
+  gap: 1em;
+  margin-bottom: 1em;
+}
+
+.tab-btn {
+  background: #101820;
+  color: #fff;
+  padding: 8px 16px;
+  border: none;
+  font-family: 'Anton', sans-serif;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: 0.3s all ease;
+}
+
+.tab-btn.active {
+  background: #006778;
+  box-shadow: 4px 4px 0 #d7a22a;
+}
+
+.tab-content {
+  display: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.tab-content.active {
+  display: block;
+  opacity: 1;
+}
+/* #endregion */
+/* #endregion */
+
+/* #region スケジュールバー */
+#score-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background-color: #101820;
+  color: #fff;
+  z-index: 999;
+  padding: 4px 8px;
+  font-size: 13px;
+  font-family: 'Anton', sans-serif;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.schedule-carousel-wrapper {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  max-width: 100%;
+}
+
+.schedule-carousel-viewport {
+  overflow: hidden;
+  width: 100%;
+}
+
+.schedule-carousel {
+  display: flex;
+  transition: transform 0.3s ease;
+}
+
+.schedule-slide {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 200px;
+  padding: 4px 6px;
+  box-sizing: border-box;
+  text-align: left;
+  gap: 2px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  line-height: 1.5;
+}
+
+.line2 {
+  display: flex;
+  align-items: center;
+  padding-left: 1em;
+  gap: 2.5em; /* ← 追加して調整 */
+  width: fit-content;
+  justify-content: flex-start;
+}
+
+.result {
+  margin-left: 0;
+  font-size: 1em;
+}
+
+.schedule-slide.win .result {
+  color: #00ff88;
+}
+.schedule-slide.loss .result {
+  color: #ff6666;
+}
+.schedule-slide.upcoming .result {
+  color: #cccccc;
+}
+
+.opponent {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.schedule-slide .team-badge {
+  font-size: 1em;
+  padding: 0 4px;
+  border-radius: 4px;
+  font-weight: normal;
+}
+
+.schedule-nav {
+  background: none;
+  color: #d7a22a;
+  font-size: 18px;
+  border: none;
+  cursor: pointer;
+  padding: 0 10px;
+}
+
+.schedule-slide.next-game {
+  border: 2px solid #D7A22A;
+  box-shadow: 0 0 10px #D7A22A;
+  background-color: #101820;
+}
+
+.line1 .week {
+  color: #d7a22a;
+  font-size: 1.1em;
+}
+/* #endregion */
+
+/* #region スコア、スコアフロー */
+/* ラッパー（影・角丸・横スクロール） */
+.score-table-wrapper,
+.scoreflow-wrapper{
+  display:inline-block;
+  max-width: 100%;
+  overflow-x:auto;
+  margin:0.5em 0;
+  border-radius:8px;
+  box-shadow:4px 4px 0 #006778, -4px -4px 0 #d7a22a;
+}
+
+/* テーブル本体 */
+.score-table,
+.scoreflow-table{
+  width:fit-content;
+  border-collapse:collapse;
+  font-size:0.95rem;
+  background:#fff;
+  table-layout:auto;
+  white-space:nowrap;
+  margin: 0;
+}
+
+/* ヘッダー */
+.score-table thead th{
+  position:sticky; top:0; z-index:2;
+  background:#101820; color:#fff;
+  font-weight:700;
+}
+
+/* セル共通 */
+.score-table th, .score-table td{
+  border:1px solid #e6e6e6;
+  padding:.55em .7em;
+  text-align:center;
+  color:#101820;
+}
+
+/* チーム名セル：チームカラーで着色 */
+.score-table th.team{
+  position:sticky; left:0; z-index:3;
+  background:var(--team-c1, #006778);
+  color:var(--team-c2, #D7A22A);
+  text-align:center;
+}
+
+/* 合計列は少し強調 */
+.score-table td.sum{
+  font-weight:700;
+  background:#fffaf0;
+}
+
+/* スコアフロー */
+.scoreflow-table th,
+.scoreflow-table td {
+  border: 1px solid #e0e0e0;
+  padding: 0.5em 0.7em;
+  text-align: center;
+}
+
+.scoreflow-table thead th {
+  background-color: #101820;
+  color: #fff;
+  font-weight: bold;
+}
+
+.scoreflow-table .quarter-row th {
+  background: #101820;
+  color: #fff;
+  text-align: center;
+  font-weight: bold;
+}
+
+.scoreflow-table td.team {
+  background: var(--team-c1, #333);
+  color: var(--team-c2, #fff);
+  text-align: center;
+  font-weight: bold;
+}
+
+.scoreflow-table td:nth-child(1) {
+  text-align: center;
+  white-space: nowrap;
+  font-size: 0.85em;
+}
+
+.scoreflow-table td:nth-child(3) {
+  text-align: center;
+  font-weight: bold;
+}
+
+.scoreflow-table td:nth-child(4) {
+  text-align: left;
+  font-size: 0.85em;
+}
+/* #endregion */
+
+/* #region ===== Roster予想 ===== */
+/* === scope root === */
+.roster-predict {
+  margin:.5em 0 1em;
+  --ink:#101820;
+  --teal:#006778;
+  --amber:#D7A22A;
+  --q-bg:#fff7ec;
+  --q-border:#f0aa42;
+  --q-chip:#b36200;
+  --ir-bg:    #fff0f0; /* 淡い赤背景 */
+  --ir-border:#e57373; /* 赤寄りの枠 */
+  --ir-chip:  #b71c1c; /* ラベル文字色 */
+  --ps-bg:    #eef5ff; /* 淡い青（サイトのPSラベル青に寄せる） */
+  --ps-border:#1e40af; /* あなたのPS青 */
+  --ps-chip:  #1e40af;
+  --ps-star: #1976d2;
+  --rookie: #c026d3;
+  --acq: #16a34a;
+}
+
+/* tabs */
+.roster-predict .tabs {
+  display:grid;
+  grid-template-columns: repeat(3,1fr);
+  gap:.4em;
+  margin:.4em 0 .8em;
+}
+.roster-predict .tab {
+  background:var(--ink);
+  color:#fff;
+  border:none;
+  padding:.2em;
+  box-shadow:2px 2px 0 var(--amber), -2px -2px 0 var(--teal);
+  font-family:'Anton', sans-serif;
+}
+.roster-predict .tab[aria-selected="true"] { background:var(--teal); }
+
+/* panels */
+.roster-predict .panel { display:none; }
+.roster-predict .panel[aria-hidden="false"] { display:block; }
+
+/* cards */
+.roster-predict .pos {
+  position: relative;
+  overflow: hidden;
+  border-radius:8px;
+  padding:.5em;
+  margin:.8em 0;
+  box-shadow:2px 2px 0 var(--teal), -2px -2px 0 var(--amber);
+}
+
+/* 一体ラベル（上部帯） */
+.roster-predict .poshead{
+  margin: calc(-.5em) calc(-.5em) .5em;      /* 上左右を内側パディング分はみ出させる */
+  padding:.3em 1em;
+  background: var(--teal);                     /* 濃い帯 */
+  color:#fff;
+  font-family:'Anton', sans-serif;
+  display:flex;
+  align-items:baseline;
+  gap:.45em;
+  border-radius:8px 8px 0 0;
+  border-bottom: solid 2px var(--amber);                  /* カード角丸と揃える */
+}
+.roster-predict .poshead .poslabel{
+  font-size:1.2em;
+  line-height:1;
+}
+.roster-predict .poshead .slots {
+  opacity:.8;
+}
+
+/* LOCK帯 */
+.roster-predict .lock,
+.roster-predict .q,
+.roster-predict .cut,
+.roster-predict .ir,
+.roster-predict .ps {
+  border-radius:6px;
+  padding:.3em;
+  display:flex;
+  align-items:center;
+  gap:.5em;
+  flex-wrap:wrap;
+}
+.roster-predict .lock {
+  background:#f0fafa;  
+  border-left:4px solid #65b4c0;
+}
+.roster-predict .q {
+  margin-top: .35em;
+  background:var(--q-bg);
+  border-left:3px solid var(--q-border);
+}
+.roster-predict .cut {
+  margin-top:.35em;
+  background:#fafafa;
+  border-left:3px solid #ddd;
+}
+.roster-predict .ir{
+  margin-top: .35em;
+  background: var(--ir-bg);
+  border-left: 3px solid var(--ir-border);
+}
+.roster-predict .ps{
+  margin-top: .35em;
+  background: var(--ps-bg);
+  border-left: 3px solid var(--ps-border);
+}
+.roster-predict .note {
+  margin-top:.5em;
+  background:#fff8e5;
+  border-left:3px solid var(--amber);
+  border-radius:6px;
+  padding:.3em;
+  font-size: 0.9em;
+}
+
+/* chips */
+.roster-predict .chip {
+  display:inline-flex;
+  align-items:center;
+  gap:.35em; border-radius:6px;
+  font-family:'Anton', sans-serif;
+  font-size:.85em;
+  padding:0 .5em;
+}
+.roster-predict .chip--lock {
+  background:var(--teal);
+  color:#fff;
+}
+.roster-predict .chip--lock::before{
+  content:"\f023";
+  font-family:"Font Awesome 6 Free";  /* ご利用のFAに合わせて */
+  font-weight:600;                     /* Solid = 900 */
+  display:inline-block;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+.roster-predict .chip--q {
+  background:transparent;
+  border:1px solid var(--q-border);
+  color:var(--q-chip);
+}
+.roster-predict .chip--cut {
+  background:transparent;
+  color:#666;
+  border:1px solid #bbb;
+}
+.roster-predict .chip--ir{
+  background-color: transparent;
+  color: var(--ir-chip);
+  border: 1px solid var(--ir-border);
+}
+.roster-predict .chip--ps{
+  background-color: transparent;
+  color: var(--ps-chip);
+  border: 1px solid var(--ps-border);
+}
+
+/* names */
+.roster-predict .names {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .25em .35em;
+  font-weight: bold;
+}
+.roster-predict .name { white-space:nowrap; }
+.roster-predict .name + .name::before {
+  content:"/";
+  margin:0 .35em;
+  opacity:.6;
+}
+.roster-predict .name--rookie{
+  color: var(--rookie);
+}
+.roster-predict .name--acq{
+  color: var(--acq);
+  text-decoration: underline dotted 2px currentColor;
+  text-underline-offset: 2px;
+}
+.roster-predict .star  {
+  display:inline-block;
+  margin-right:.25em;
+  color:var(--amber);
+}
+.roster-predict .star--ps{
+  color: var(--ps-star);
+}
+
+/* mobile */
+@media (max-width:560px){
+  .roster-predict .tabs {
+    grid-template-columns: repeat(3, minmax(0,1fr));
+  }
+  .roster-predict{
+    --label-col: 6ch; 
+    --label-gap: 2rem;
+  }
+
+  .roster-predict .lock,
+  .roster-predict .q,
+  .roster-predict .cut,
+  .roster-predict .ir,
+  .roster-predict .ps {
+    display:grid;                          /* flex -> grid に切替 */
+    grid-template-columns: var(--label-col) 1fr; /* 左はバッジ幅、右は残り */
+    column-gap: var(--label-gap);
+    row-gap:.25em;
+    align-items:start;
+  }
+  .roster-predict .chip   {
+    grid-column:1;
+    justify-self: center;
+    align-self: center;
+    width: max-content;
+  }
+  .roster-predict .names {
+    grid-column:2;
+    display:block;
+  }
+  .roster-predict .name {
+    display:block;
+    white-space:normal;
+    position: relative;
+    padding-left: 1.5em;
+  }
+  .roster-predict .name .star{
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1.1em;
+    text-align: center;
+  }
+  .roster-predict .name + .name::before {
+    content:""; margin:0;
+  }
+}
+
+/* #endregion */
