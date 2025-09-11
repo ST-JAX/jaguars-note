@@ -3238,3 +3238,16 @@ padding-left: 3px;
 }
 
 /* #endregion */
+
+.charts-wrap {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  justify-items: center;
+}
+
+.charts-wrap canvas {
+  width: 100%;
+  max-width: 320px;
+  height: 300px;
+}
