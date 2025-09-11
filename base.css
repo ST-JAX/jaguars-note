@@ -3244,6 +3244,7 @@ padding-left: 3px;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 20px;
   justify-items: center;
+  align-items: start;
 }
 
 .charts-wrap canvas {
@@ -3251,3 +3252,11 @@ padding-left: 3px;
   max-width: 320px;
   height: 300px;
 }
+
+
+/* @media (max-width: 600px) {
+	.chart-wrap canvas {
+		height: 250pox !important;
+		max-width: 100%;
+	}
+} */
