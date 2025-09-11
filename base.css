@@ -3254,9 +3254,13 @@ padding-left: 3px;
   aspect-ratio: unset !important;
 }
 
+/* スマホは高さを小さく */
 @media (max-width: 600px) {
-	.charts-wrap canvas {
-		height: 250px !important;
-		max-width: 100%;
-	}
+  .charts-wrap {
+    grid-template-columns: 1fr;
+  }
+  .charts-wrap canvas {
+    max-width: 100%;
+    height: 250px;
+  }
 }
