@@ -3279,6 +3279,8 @@ padding-left: 3px;
 
 /* ===== NEWSバー ===== */
 
+/* ===== NEWSバー ===== */
+
 .newsbar-b {
   background-color: #101820;
   color: #fff;
@@ -3295,7 +3297,7 @@ padding-left: 3px;
   gap: 0.8rem;
 }
 
-/* NEWS ラベル（丸 pill） */
+/* NEWS ラベル */
 .newsbar-b-label {
   background-color: #d7a22a;
   color: #101820;
@@ -3306,35 +3308,33 @@ padding-left: 3px;
   flex-shrink: 0;
 }
 
-/* スクロールする部分のビューポート */
+/* スクロールビュー */
 .newsbar-b-viewport {
-  overflow-x: auto;                 /* ← auto に変更 */
+  overflow-x: auto;
   overflow-y: hidden;
   flex: 1;
-  -webkit-overflow-scrolling: touch; /* iOS のスムーススクロール */
+  -webkit-overflow-scrolling: touch;
 }
 
-/* スクロールバーは消しておく（お好み） */
 .newsbar-b-viewport::-webkit-scrollbar {
   display: none;
 }
 
-
-/* 中身（自動スクロールさせる ul） */
+/* リスト本体 */
 .newsbar-b-list {
   list-style: none;
   margin: 0;
   padding: 0;
   display: inline-flex;
-  gap: 2rem;
   white-space: nowrap;
-  will-change: transform; /* JS側で transform を変更 */
 }
 
+/* アイテム間の余白は gap ではなく margin-right で */
 .newsbar-b-item {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
+  margin-right: 2rem;
 }
 
 .newsbar-b-date {
@@ -3343,7 +3343,7 @@ padding-left: 3px;
   color: #d7a22a;
 }
 
-/* タイプバッジ共通 */
+/* タイプ pill */
 .newsbar-b-type {
   font-size: 0.7rem;
   padding: 2px 8px;
@@ -3353,7 +3353,7 @@ padding-left: 3px;
   border: 1px solid currentColor;
 }
 
-/* タイプ別色（上の :root を使用） */
+/* タイプ色（前に定義している var(--news-xxx) を前提に） */
 .newsbar-b-type--contract    { color: var(--news-contract); }
 .newsbar-b-type--draft       { color: var(--news-draft); }
 .newsbar-b-type--fa          { color: var(--news-fa); }
@@ -3374,23 +3374,22 @@ padding-left: 3px;
   border-bottom-color: #d7a22a;
 }
 
-/* ===== See More（ニュースバー末尾） ===== */
+/* See More ボタン */
 .newsbar-b-more-link {
   position: relative;
   display: inline-block;
   padding: 2px 26px 2px 14px;
-  font-family: "Anton";
-/*   font-weight: normal; */
   background-color: #006778;
   color: #fff;
   border-radius: 999px;
   font-size: 0.8rem;
   letter-spacing: 0.03em;
   text-decoration: none;
+  white-space: nowrap;
   transition: background 0.2s, transform 0.2s;
 }
 
-/* ▲ シャープなCSS矢印（擬似要素） */
+/* CSS矢印 */
 .newsbar-b-more-link::after {
   content: "";
   position: absolute;
@@ -3400,7 +3399,7 @@ padding-left: 3px;
   height: 0;
   border-top: 4px solid transparent;
   border-bottom: 4px solid transparent;
-  border-left: 6px solid #fff;  /* ←矢印の色 */
+  border-left: 6px solid #fff;
   transform: translateY(-50%);
   transition: transform 0.2s;
 }
@@ -3410,7 +3409,6 @@ padding-left: 3px;
   transform: translateX(2px);
 }
 
-/* ホバー時、矢印を少し動かして強調 */
 .newsbar-b-more-link:hover::after {
   transform: translate(2px, -50%);
 }
@@ -3425,6 +3423,7 @@ padding-left: 3px;
     font-size: 0.8rem;
   }
 }
+
 
 /* （任意）トップページだけNEWSバーを表示したい場合 */
 /*
