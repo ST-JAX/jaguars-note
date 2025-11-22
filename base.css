@@ -3308,9 +3308,17 @@ padding-left: 3px;
 
 /* スクロールする部分のビューポート */
 .newsbar-b-viewport {
-  overflow: hidden;
+  overflow-x: auto;                 /* ← auto に変更 */
+  overflow-y: hidden;
   flex: 1;
+  -webkit-overflow-scrolling: touch; /* iOS のスムーススクロール */
 }
+
+/* スクロールバーは消しておく（お好み） */
+.newsbar-b-viewport::-webkit-scrollbar {
+  display: none;
+}
+
 
 /* 中身（自動スクロールさせる ul） */
 .newsbar-b-list {
@@ -3364,6 +3372,47 @@ padding-left: 3px;
 .newsbar-b-title:hover {
   color: #d7a22a;
   border-bottom-color: #d7a22a;
+}
+
+/* ===== See More（ニュースバー末尾） ===== */
+.newsbar-b-more-link {
+  position: relative;
+  display: inline-block;
+  padding: 2px 26px 2px 14px;
+  font-family: "Anton";
+/*   font-weight: normal; */
+  background-color: #006778;
+  color: #fff;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  letter-spacing: 0.03em;
+  text-decoration: none;
+  transition: background 0.2s, transform 0.2s;
+}
+
+/* ▲ シャープなCSS矢印（擬似要素） */
+.newsbar-b-more-link::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  width: 0;
+  height: 0;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  border-left: 6px solid #fff;  /* ←矢印の色 */
+  transform: translateY(-50%);
+  transition: transform 0.2s;
+}
+
+.newsbar-b-more-link:hover {
+  background-color: #008a99;
+  transform: translateX(2px);
+}
+
+/* ホバー時、矢印を少し動かして強調 */
+.newsbar-b-more-link:hover::after {
+  transform: translate(2px, -50%);
 }
 
 @media (max-width: 768px) {
