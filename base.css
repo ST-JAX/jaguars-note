@@ -3398,6 +3398,7 @@ padding-left: 3px;
 .news-list-title {
   font-family: "Anton", system-ui, sans-serif;
   font-size: 1.6rem;
+  font-weight: normal;
   letter-spacing: 0.06em;
   display: inline-block;
   border-bottom: 2px solid #d7a22a;
@@ -3503,6 +3504,7 @@ padding-left: 3px;
 .news-item-type {
   font-size: 0.7rem;
   padding: 2px 8px;
+  min-width: 80px;
   border-radius: 999px;
   border: 1px solid currentColor;
   text-transform: uppercase;
@@ -3520,18 +3522,19 @@ padding-left: 3px;
 .news-item-type--roster-move { color: var(--news-roster-move); }
 .news-item-type--trade       { color: var(--news-trade); }
 
-.news-item-title {
-  font-size: 0.95rem;
-  text-decoration: none;
-  color: #222;
+
+.entry-content .news-list .news-item-title {
+  text-decoration: none;              /* 下線を消す */
   border-bottom: 1px dashed transparent;
+  color: #101820;
   transition: color 0.2s, border-bottom-color 0.2s;
 }
 
-.news-item-title:hover {
+.entry-content .news-list .news-item-title:hover {
   color: #006778;
   border-bottom-color: #006778;
 }
+
 
 /* スマホ時の2段組レイアウト */
 @media (max-width: 640px) {
