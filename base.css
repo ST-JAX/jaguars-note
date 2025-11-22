@@ -3406,6 +3406,7 @@ padding-left: 3px;
 
 .newsbar-b-more-link:hover {
   background-color: #008a99;
+  color: #fff;
   transform: translateX(2px);
 }
 
