@@ -2731,6 +2731,9 @@ padding-left: 3px;
   color: #ffffff;
   font-family: "Anton", sans-serif;
   font-size: 12px;
+  background-color: #fff;
+  box-shadow: 4px 4px 0 #d7a22a, -4px -4px 0 #006778;
+  border-radius: 8px;
 }
 
 /* 中身の見た目はヘッダーと共通クラスを流用 */
@@ -2757,27 +2760,38 @@ padding-left: 3px;
   color: inherit;
   flex-wrap: nowrap;
   white-space: nowrap;
+  cursor: auto;
 }
 
 #schedule-record-bar .jax-record-team {
-  font-size: 1.1em;
+  font-size: 1.8em;
   letter-spacing: 0.1em;
 }
 
 #schedule-record-bar .jax-record-overall {
-  font-size: 1.4em;
+  font-size: 1.8em;
   padding: 1px 10px;
   background-color: #006778;
   color: #fff;
   border-radius: 999px;
-  box-shadow: 2px 2px 0 #d7a22a;
+}
+
+#schedule-record-bar .jax-record-pill {
+  background: #101820;
+  border: 1px solid #555;
+  padding: 1px 8px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.2rem;
+  white-space: nowrap;
 }
 
 /* Division pill（常に横に出るやつ） */
 #schedule-record-bar .jax-record-pill-division {
-  background: #181f28;
-  border: 1px solid #d7a22a;
-  padding: 2px 8px;
+  background: #101820;
+  border: 1px solid #006778;
+  padding: 1px 8px;
   border-radius: 999px;
   display: inline-flex;
   align-items: baseline;
@@ -2794,24 +2808,13 @@ padding-left: 3px;
   padding-top: 3px;
 }
 
-#schedule-record-bar .jax-record-pill {
-  background: #181f28;
-  border: 1px solid #555;
-  padding: 2px 8px;
-  border-radius: 999px;
-  display: inline-flex;
-  align-items: baseline;
-  gap: 0.2rem;
-  white-space: nowrap;
-}
-
 #schedule-record-bar .jax-record-label {
-  font-size: 0.7rem;
+  font-size: 1.4em;
   opacity: 0.8;
 }
 
 #schedule-record-bar .jax-record-num {
-  font-size: 0.9rem;
+  font-size: 1.8em;
   font-weight: 700;
 }
 
@@ -3138,7 +3141,7 @@ padding-left: 3px;
 
 /* 数字（1-1 / 4-2など）を強めに */
 .jax-record-num {
-  font-size: 1.4rem;
+  font-size: 1.4em;
   font-weight: 700;
 }
 
