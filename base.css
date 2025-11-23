@@ -2734,6 +2734,7 @@ padding-left: 3px;
   background-color: #fff;
   box-shadow: 4px 4px 0 #d7a22a, -4px -4px 0 #006778;
   border-radius: 8px;
+  margin-bottom: 20px;
 }
 
 /* 中身の見た目はヘッダーと共通クラスを流用 */
@@ -2815,7 +2816,7 @@ padding-left: 3px;
 
 #schedule-record-bar .jax-record-num {
   font-size: 1.8em;
-  font-weight: 700;
+  font-weight: normal;
 }
 
 /* Streak 色分けもヘッダーと共通に */
@@ -3165,22 +3166,6 @@ padding-left: 3px;
   .jax-record-splits {
     flex-wrap: nowrap;
     gap: 0.5rem;
-  }
-}
-
-/* スマホ向け微調整 */
-@media (max-width: 768px) {
-  .jax-record-inner {
-    padding: 6px 6px 4px;
-  }
-
-  .jax-record-overall {
-    font-size: 1.3em;
-    padding: 1px 8px;
-  }
-
-  .jax-record-num {
-    font-size: 0.85rem;
   }
 }
 
