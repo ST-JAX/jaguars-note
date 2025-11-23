@@ -16,7 +16,7 @@
 
 body {
   font-family: 'Noto Sans JP', sans-selif;
-  padding-top: 63px;
+  padding-top: 100px;
 }
 
 .entry-content{
@@ -2905,6 +2905,7 @@ padding-left: 3px;
 /* #endregion */
 
 /* #region シーズン勝敗 */
+/* JAX Record Bar 全体 */
 #jax-record-bar {
   background-color: #101820;
   color: #ffffff;
@@ -2912,23 +2913,35 @@ padding-left: 3px;
   font-size: 12px;
 }
 
-/* 全体を縦にまとめて中央寄せ */
+/* 中身を縦にまとめて中央寄せ */
 .jax-record-inner {
   max-width: 960px;
   margin: 0 auto;
-  padding: 4px 8px 6px;
+  padding: 4px 8px 3px;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 4px;
+  gap: 2px;
 }
 
-/* JAX 6-4 部分 */
+/* クリックできるメイン部分（JAX 6-4） */
 .jax-record-main {
+  border: none;
+  background: none;
+  padding: 2px 4px;
+  margin: 0;
   display: inline-flex;
   align-items: baseline;
   gap: 0.45rem;
+  cursor: pointer;
+  color: inherit;
+}
+
+/* フォーカス時のアウトライン（キーボード操作対応） */
+.jax-record-main:focus-visible {
+  outline: 2px solid #d7a22a;
+  outline-offset: 2px;
 }
 
 .jax-record-team {
@@ -2945,15 +2958,43 @@ padding-left: 3px;
   box-shadow: 2px 2px 0 #d7a22a;
 }
 
-/* pill の並び（PCは1行に収まることが多いイメージ） */
+/* ▼ 矢印 */
+.jax-record-chevron {
+  font-size: 0.7rem;
+  opacity: 0.8;
+  transform: translateY(1px);
+  transition: transform 0.2s ease;
+}
+
+/* 開いたときは▲に見えるように回転 */
+#jax-record-bar.is-open .jax-record-chevron {
+  transform: translateY(1px) rotate(180deg);
+}
+
+/* 詳細部分（最初は閉じている） */
+.jax-record-details {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.25s ease, opacity 0.2s ease;
+}
+
+/* 開いたときに中身を見せる */
+#jax-record-bar.is-open .jax-record-details {
+  max-height: 200px; /* pillが2〜3行入るぐらいの十分な高さ */
+  opacity: 1;
+}
+
+/* pill の並び */
 .jax-record-splits {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center; /* PCもスマホも中央揃え */
+  justify-content: center;
   gap: 0.35rem;
+  padding: 3px 0 5px;
 }
 
-/* 各 pill の箱 */
+/* 各 pill */
 .jax-record-pill {
   background: #181f28;
   border: 1px solid #555;
@@ -2962,46 +3003,48 @@ padding-left: 3px;
   display: inline-flex;
   align-items: baseline;
   gap: 0.2rem;
+  white-space: nowrap;
 }
 
-/* vs AFC South / Home などのラベル部分 */
+/* ラベル（vs AFC South / Homeなど） */
 .jax-record-label {
   font-size: 0.7rem;
   opacity: 0.8;
 }
 
-/* 1-1 / 4-2 などの数字部分を大きく目立たせる */
+/* 数字（1-1 / 4-2など）を強めに */
 .jax-record-num {
   font-size: 0.9rem;
   font-weight: 700;
 }
 
-/* 連勝 Streak（W2以上） */
+/* Streak W2+（連勝） */
 .jax-record-streak .jax-record-num {
-  color: #d7a22a; /* gold */
+  color: #d7a22a;
 }
 
-/* 連敗 Streak（L2以上）は赤で強調する用 */
+/* Streak L2+（連敗） */
 .jax-record-streak-loss .jax-record-num {
   color: #ff5252;
 }
 
-/* 引き分け連続（ほぼないけど一応） */
+/* Streak D2+（連続引き分け） */
 .jax-record-streak-draw .jax-record-num {
   color: #cccccc;
 }
 
-/* ================================
-   レスポンシブ調整
-   ================================ */
-
-@media (max-width: 768px) {
-  .schedule-carousel-wrapper {
-    padding: 4px 6px;
+/* PCで pill を横並び優先 */
+@media (min-width: 900px) {
+  .jax-record-splits {
+    flex-wrap: nowrap;
+    gap: 0.5rem;
   }
+}
 
+/* スマホ向け微調整 */
+@media (max-width: 768px) {
   .jax-record-inner {
-    padding: 6px 6px 8px;
+    padding: 6px 6px 4px;
   }
 
   .jax-record-overall {
@@ -3010,9 +3053,10 @@ padding-left: 3px;
   }
 
   .jax-record-num {
-    font-size: 0.85rem; /* モバイルでは少しだけ数字も小さめに */
+    font-size: 0.85rem;
   }
 }
+
 /* #endregion */
 
 /* #endregion */
