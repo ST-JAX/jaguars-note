@@ -2921,18 +2921,18 @@ padding-left: 3px;
 .jax-record-inner {
   max-width: 960px;
   margin: 0 auto;
-  padding: 6px 8px;
+  padding: 4px 8px;
   display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 0.5rem 1rem;
+  flex-direction: column;      /* 縦並び */
+  align-items: center;         /* 中央寄せ */
+  text-align: center;          /* テキストも中央 */
+  gap: 4px;                    /* 上下の隙間を小さく */
 }
 
 .jax-record-main {
-  display: flex;
+  display: inline-flex;
   align-items: baseline;
-  gap: 0.35rem;
-  white-space: nowrap;
+  gap: 0.4rem;
 }
 
 .jax-record-team {
@@ -2941,8 +2941,8 @@ padding-left: 3px;
 }
 
 .jax-record-overall {
-  font-size: 1.3em;
-  padding: 1px 8px;
+  font-size: 1.4em;            /* ここを少し大きく */
+  padding: 1px 10px;
   background-color: #006778;
   color: #fff;
   border-radius: 999px;
@@ -2957,27 +2957,44 @@ padding-left: 3px;
 .jax-record-splits {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.3rem;
+  justify-content: center;
+  gap: 0.35rem;
 }
 
 .jax-record-pill {
   background: #181f28;
   border: 1px solid #555;
-  padding: 2px 7px;
+  padding: 2px 8px;
   border-radius: 999px;
-  font-size: 0.75rem;
-  white-space: nowrap;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.2rem;
 }
 
+/* Home / Away / vs AFC などのラベル部分 */
+.jax-record-label {
+  font-size: 0.7rem;
+  opacity: 0.8;
+}
+
+/* 1-1 / 4-2 などの数字を大きく・太く */
+.jax-record-num {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+/* Streak pill だけ少し色を強調 */
 .jax-record-pill.jax-record-streak {
   border-color: #d7a22a;
+}
+
+.jax-record-pill.jax-record-streak .jax-record-num {
   color: #d7a22a;
 }
 
 @media (max-width: 768px) {
   .jax-record-inner {
-    flex-direction: column;
-    align-items: flex-start;
+    padding: 6px 8px;
   }
 }
 /* #endregion */
