@@ -2905,12 +2905,6 @@ padding-left: 3px;
 /* #endregion */
 
 /* #region シーズン勝敗 */
-.header-divider {
-  height: 1px;
-  background: #2a3240;
-}
-
-/* #region JAX Record Bar */
 #jax-record-bar {
   background-color: #101820;
   color: #ffffff;
@@ -2918,21 +2912,23 @@ padding-left: 3px;
   font-size: 12px;
 }
 
+/* 全体を縦にまとめて中央寄せ */
 .jax-record-inner {
   max-width: 960px;
   margin: 0 auto;
-  padding: 4px 8px;
+  padding: 4px 8px 6px;
   display: flex;
-  flex-direction: column;      /* 縦並び */
-  align-items: center;         /* 中央寄せ */
-  text-align: center;          /* テキストも中央 */
-  gap: 4px;                    /* 上下の隙間を小さく */
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
 }
 
+/* JAX 6-4 部分 */
 .jax-record-main {
   display: inline-flex;
   align-items: baseline;
-  gap: 0.4rem;
+  gap: 0.45rem;
 }
 
 .jax-record-team {
@@ -2941,7 +2937,7 @@ padding-left: 3px;
 }
 
 .jax-record-overall {
-  font-size: 1.4em;            /* ここを少し大きく */
+  font-size: 1.4em;
   padding: 1px 10px;
   background-color: #006778;
   color: #fff;
@@ -2949,18 +2945,15 @@ padding-left: 3px;
   box-shadow: 2px 2px 0 #d7a22a;
 }
 
-.jax-record-season-label {
-  font-size: 0.8em;
-  opacity: 0.7;
-}
-
+/* pill の並び（PCは1行に収まることが多いイメージ） */
 .jax-record-splits {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
+  justify-content: center; /* PCもスマホも中央揃え */
   gap: 0.35rem;
 }
 
+/* 各 pill の箱 */
 .jax-record-pill {
   background: #181f28;
   border: 1px solid #555;
@@ -2971,30 +2964,53 @@ padding-left: 3px;
   gap: 0.2rem;
 }
 
-/* Home / Away / vs AFC などのラベル部分 */
+/* vs AFC South / Home などのラベル部分 */
 .jax-record-label {
   font-size: 0.7rem;
   opacity: 0.8;
 }
 
-/* 1-1 / 4-2 などの数字を大きく・太く */
+/* 1-1 / 4-2 などの数字部分を大きく目立たせる */
 .jax-record-num {
   font-size: 0.9rem;
   font-weight: 700;
 }
 
-/* Streak pill だけ少し色を強調 */
-.jax-record-pill.jax-record-streak {
-  border-color: #d7a22a;
+/* 連勝 Streak（W2以上） */
+.jax-record-streak .jax-record-num {
+  color: #d7a22a; /* gold */
 }
 
-.jax-record-pill.jax-record-streak .jax-record-num {
-  color: #d7a22a;
+/* 連敗 Streak（L2以上）は赤で強調する用 */
+.jax-record-streak-loss .jax-record-num {
+  color: #ff5252;
 }
+
+/* 引き分け連続（ほぼないけど一応） */
+.jax-record-streak-draw .jax-record-num {
+  color: #cccccc;
+}
+
+/* ================================
+   レスポンシブ調整
+   ================================ */
 
 @media (max-width: 768px) {
+  .schedule-carousel-wrapper {
+    padding: 4px 6px;
+  }
+
   .jax-record-inner {
-    padding: 6px 8px;
+    padding: 6px 6px 8px;
+  }
+
+  .jax-record-overall {
+    font-size: 1.3em;
+    padding: 1px 8px;
+  }
+
+  .jax-record-num {
+    font-size: 0.85rem; /* モバイルでは少しだけ数字も小さめに */
   }
 }
 /* #endregion */
