@@ -2725,6 +2725,107 @@ padding-left: 3px;
   padding: 6px 8px;
 }
 
+/* Schedule 固定ページ用の戦績バー外枠 */
+#schedule-record-bar {
+  background-color: #101820;
+  color: #ffffff;
+  font-family: "Anton", sans-serif;
+  font-size: 12px;
+}
+
+/* 中身の見た目はヘッダーと共通クラスを流用 */
+#schedule-record-bar .jax-record-inner {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 8px 8px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+}
+
+/* JAX 6-4 + Division を横並びに */
+#schedule-record-bar .jax-record-main {
+  border: none;
+  background: none;
+  padding: 2px 4px;
+  margin: 0;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  color: inherit;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+#schedule-record-bar .jax-record-team {
+  font-size: 1.1em;
+  letter-spacing: 0.1em;
+}
+
+#schedule-record-bar .jax-record-overall {
+  font-size: 1.4em;
+  padding: 1px 10px;
+  background-color: #006778;
+  color: #fff;
+  border-radius: 999px;
+  box-shadow: 2px 2px 0 #d7a22a;
+}
+
+/* Division pill（常に横に出るやつ） */
+#schedule-record-bar .jax-record-pill-division {
+  background: #181f28;
+  border: 1px solid #d7a22a;
+  padding: 2px 8px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.2rem;
+  white-space: nowrap;
+}
+
+/* 下の pill 群（Conference / NFC / Home / Away / Streak） */
+#schedule-record-bar .jax-record-splits {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.35rem;
+  padding-top: 3px;
+}
+
+#schedule-record-bar .jax-record-pill {
+  background: #181f28;
+  border: 1px solid #555;
+  padding: 2px 8px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.2rem;
+  white-space: nowrap;
+}
+
+#schedule-record-bar .jax-record-label {
+  font-size: 0.7rem;
+  opacity: 0.8;
+}
+
+#schedule-record-bar .jax-record-num {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+/* Streak 色分けもヘッダーと共通に */
+#schedule-record-bar .jax-record-streak .jax-record-num {
+  color: #d7a22a;
+}
+#schedule-record-bar .jax-record-streak-loss .jax-record-num {
+  color: #ff5252;
+}
+#schedule-record-bar .jax-record-streak-draw .jax-record-num {
+  color: #cccccc;
+}
+
 @media screen and (max-width: 768px) {
   .schedule-table-wrapper {
     overflow-x: auto;
@@ -2744,6 +2845,17 @@ padding-left: 3px;
 
   .schedule-table .team-badge{
     padding: 0 0.3em;
+  }
+
+  #schedule-record-bar .jax-record-inner {
+    padding: 8px 6px 6px;
+  }
+  #schedule-record-bar .jax-record-overall {
+    font-size: 1.3em;
+    padding: 1px 8px;
+  }
+  #schedule-record-bar .jax-record-num {
+    font-size: 0.85rem;
   }
 }
 /* #endregion */
@@ -2958,10 +3070,22 @@ padding-left: 3px;
   border-radius: 999px;
 }
 
+/* 各 pill */
+.jax-record-pill {
+  background: #181f28;
+  border: 1px solid #555;
+  padding: 1px 8px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.2rem;
+  white-space: nowrap;
+}
+
 /* Division pill（ヘッダー内、常時表示） */
 .jax-record-pill-division {
   background: #181f28;
-  border: 1px solid #d7a22a;   /* ちょっとだけ目立たせる */
+  border: 1px solid #006778;   /* ちょっとだけ目立たせる */
   padding: 2px 8px;
   border-radius: 999px;
   display: inline-flex;
@@ -3006,18 +3130,6 @@ padding-left: 3px;
   padding: 3px 0 5px;
 }
 
-/* 各 pill */
-.jax-record-pill {
-  background: #181f28;
-  border: 1px solid #555;
-  padding: 2px 8px;
-  border-radius: 999px;
-  display: inline-flex;
-  align-items: baseline;
-  gap: 0.2rem;
-  white-space: nowrap;
-}
-
 /* ラベル（vs AFC South / Homeなど） */
 .jax-record-label {
   font-size: 0.7rem;
@@ -3026,7 +3138,7 @@ padding-left: 3px;
 
 /* 数字（1-1 / 4-2など）を強めに */
 .jax-record-num {
-  font-size: 0.9rem;
+  font-size: 1.4rem;
   font-weight: 700;
 }
 
