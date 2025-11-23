@@ -2796,14 +2796,19 @@ padding-left: 3px;
 /* #endregion */
 
 /* #region スケジュールバー */
-#score-bar {
+/* スケジュール + JAX Record をまとめて固定するラッパー */
+#score-wrapper {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
+  z-index: 999;
+}
+
+/* スケジュールバー自体は見た目だけ担当 (fixed は外す) */
+#score-bar {
   background-color: #101820;
   color: #fff;
-  z-index: 999;
   padding: 4px 8px;
   font-size: 13px;
   font-family: 'Anton', sans-serif;
@@ -3357,8 +3362,6 @@ padding-left: 3px;
   --news-roster-move: #4fb573;
   --news-trade:       #e67e22;
 }
-
-/* ===== NEWSバー ===== */
 
 /* ===== NEWSバー ===== */
 
