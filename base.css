@@ -2851,15 +2851,8 @@ padding-left: 3px;
     padding: 0 0.3em;
   }
 
-  #schedule-record-bar .jax-record-inner {
-    padding: 8px 6px 6px;
-  }
-  #schedule-record-bar .jax-record-overall {
-    font-size: 1.3em;
-    padding: 1px 8px;
-  }
-  #schedule-record-bar .jax-record-num {
-    font-size: 0.85rem;
+  #schedule-record-bar .jax-record-label {
+    font-size: 1.1em;
   }
 }
 /* #endregion */
