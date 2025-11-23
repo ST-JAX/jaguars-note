@@ -2899,6 +2899,87 @@ padding-left: 3px;
 }
 /* #endregion */
 
+/* #region シーズン勝敗 */
+.header-divider {
+  height: 1px;
+  background: #2a3240;
+}
+
+/* #region JAX Record Bar */
+#jax-record-bar {
+  background-color: #101820;
+  color: #ffffff;
+  font-family: "Anton", sans-serif;
+  font-size: 12px;
+}
+
+.jax-record-inner {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 6px 8px;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+}
+
+.jax-record-main {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  white-space: nowrap;
+}
+
+.jax-record-team {
+  font-size: 1.1em;
+  letter-spacing: 0.1em;
+}
+
+.jax-record-overall {
+  font-size: 1.3em;
+  padding: 1px 8px;
+  background-color: #006778;
+  color: #fff;
+  border-radius: 999px;
+  box-shadow: 2px 2px 0 #d7a22a;
+}
+
+.jax-record-season-label {
+  font-size: 0.8em;
+  opacity: 0.7;
+}
+
+.jax-record-splits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.jax-record-pill {
+  background: #181f28;
+  border: 1px solid #555;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.jax-record-pill.jax-record-streak {
+  border-color: #d7a22a;
+  color: #d7a22a;
+}
+
+@media (max-width: 768px) {
+  .jax-record-inner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+/* #endregion */
+
+/* #endregion */
+
+
 /* #region スコア、スコアフロー */
 /* ラッパー（影・角丸・横スクロール） */
 .score-table-wrapper,
