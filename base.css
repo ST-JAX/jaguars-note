@@ -2945,8 +2945,9 @@ padding-left: 3px;
 }
 
 .jax-record-team {
-  font-size: 1.1em;
+  font-size: 1.4em;
   letter-spacing: 0.1em;
+  color: #D7A22A;
 }
 
 .jax-record-overall {
@@ -2955,15 +2956,26 @@ padding-left: 3px;
   background-color: #006778;
   color: #fff;
   border-radius: 999px;
-  box-shadow: 2px 2px 0 #d7a22a;
+}
+
+/* Division pill（ヘッダー内、常時表示） */
+.jax-record-pill-division {
+  background: #181f28;
+  border: 1px solid #d7a22a;   /* ちょっとだけ目立たせる */
+  padding: 2px 8px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.2rem;
+  white-space: nowrap;
 }
 
 /* ▼ 矢印 */
 .jax-record-chevron {
   font-size: 0.7rem;
-  opacity: 0.8;
   transform: translateY(1px);
   transition: transform 0.2s ease;
+  color: #D7A22A;
 }
 
 /* 開いたときは▲に見えるように回転 */
