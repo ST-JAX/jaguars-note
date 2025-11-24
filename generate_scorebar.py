@@ -40,7 +40,7 @@ TEAM_INFO = {
     "PHI": ("NFC", "East"),
     "DAL": ("NFC", "East"),
     "NYG": ("NFC", "East"),
-    "WSH": ("NFC", "East"),  # or "WAS" など、CSVに合わせて変更
+    "WAS": ("NFC", "East"),  # or "WAS" など、CSVに合わせて変更
     # NFC North
     "GB": ("NFC", "North"),
     "MIN": ("NFC", "North"),
