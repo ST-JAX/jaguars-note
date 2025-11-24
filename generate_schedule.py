@@ -39,7 +39,7 @@ TEAM_INFO = {
     "PHI": ("NFC", "East"),
     "DAL": ("NFC", "East"),
     "NYG": ("NFC", "East"),
-    "WSH": ("NFC", "East"),  # CSV で WAS を使っているなら "WAS": (...) に変更
+    "WAS": ("NFC", "East"),  # CSV で WAS を使っているなら "WAS": (...) に変更
     # NFC North
     "GB": ("NFC", "North"),
     "MIN": ("NFC", "North"),
