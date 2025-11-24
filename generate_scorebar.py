@@ -1,8 +1,8 @@
-
 import pandas as pd
 import sys
 import os
 from datetime import datetime
+import unicodedata
 
 # ==== 入力チェック ====
 if len(sys.argv) < 2:
@@ -15,41 +15,46 @@ color_path = os.path.join(script_dir, "team_color.xlsx")
 
 # ==== データ読み込み ====
 schedule_df = pd.read_csv(csv_path, dtype=str)
+# カラム名を正規化（全角→半角・前後の空白削除）
+schedule_df.columns = [unicodedata.normalize("NFKC", str(c)).strip() for c in schedule_df.columns]
 colors_df = pd.read_excel(color_path)
 
 # ==== カラム整形 ====
-schedule_df.columns = [col.strip() for col in schedule_df.columns]
-schedule_df = schedule_df.rename(columns={
-    "試合日時（日本時間）": "datetime",
-    "Week": "week",
-    "チーム": "opponent",
-    "Home/Away": "home",
-    "Score": "score",
-    "Win/Lose": "win"
-})
+# 英語カラムだけ扱いやすい名前に変更（日本語日時カラムはそのまま）
+schedule_df = schedule_df.rename(
+    columns={
+        "Week": "week",
+        "チーム": "opponent",
+        "Home/Away": "home",
+        "Score": "score",
+        "Win/Lose": "win",
+    }
+)
 
 # ==== 日時整形 ====
-datetime_clean = schedule_df["datetime"].fillna("").str.replace(r"\s*\(.*\)", "", regex=True).str.strip()
+# 日本時間の日時カラム名（正規化後）
+time_col = "試合日時(日本時間)"
+
+if time_col in schedule_df.columns:
+    datetime_clean = schedule_df[time_col].fillna("").astype(str).str.replace(r"\s*\(.*\)", "", regex=True).str.strip()
+else:
+    # 念のためカラムが無い場合に備えて空文字列で埋める
+    datetime_clean = pd.Series([""] * len(schedule_df))
+
 parsed_dt = pd.to_datetime(datetime_clean, errors="coerce")
 schedule_df["datetime"] = parsed_dt
 schedule_df["datetime_str"] = datetime_clean
 
 # ==== 勝敗・スコア処理 ====
-schedule_df["result"] = schedule_df["win"].map({
-    "Win": "W", "Lose": "L", "Draw": "D"
-}).fillna("-")
+schedule_df["result"] = schedule_df["win"].map({"Win": "W", "Lose": "L", "Draw": "D"}).fillna("-")
 schedule_df["score"] = schedule_df["score"].fillna("-")
 
 # ==== venue 表示 ====
-schedule_df["venue"] = schedule_df["home"].map({
-    "Home": "Home", "Away": "Away"
-}).fillna("")
+schedule_df["venue"] = schedule_df["home"].map({"Home": "Home", "Away": "Away"}).fillna("")
 schedule_df["venue_class"] = schedule_df["venue"].str.lower()
 
 # ==== クラス付け ====
-schedule_df["class"] = schedule_df["result"].map({
-    "W": "win", "L": "loss", "D": "draw"
-}).fillna("upcoming")
+schedule_df["class"] = schedule_df["result"].map({"W": "win", "L": "loss", "D": "draw"}).fillna("upcoming")
 
 # ==== 次の試合（未実施・未来）の1試合に next-game を付加 ====
 future_games = schedule_df[(schedule_df["datetime"] > pd.Timestamp.today()) & (schedule_df["score"] == "-")]
@@ -67,9 +72,10 @@ colors_df.columns = [col.strip() for col in colors_df.columns]
 colors_df = colors_df.rename(columns={"Team": "opponent", "Color 1": "bg", "Color 2": "fg"})
 schedule_df = pd.merge(schedule_df, colors_df, on="opponent", how="left")
 
+
 # ==== スライドHTML出力関数（時間表記調整済） ====
 def build_scorebar_slides_with_date_rules(schedule_df):
-    weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+    weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
     html = ""
     for _, row in schedule_df.iterrows():
         dt = row["datetime"]
@@ -131,10 +137,300 @@ def build_scorebar_slides_with_date_rules(schedule_df):
 """
     return html.strip()
 
+
+# ==== JAX 戦績バー用の関数 ====
+
+
+def _filter_regular(df):
+    """Pre Week を除いたレギュラーシーズンのみ抽出"""
+    # 正規化後のカラム名に対応（week / Week のどちらもOK）
+    week_col = "week" if "week" in df.columns else ("Week" if "Week" in df.columns else None)
+    if not week_col:
+        return df.copy()
+    s = df[week_col].astype(str)
+    return df[~s.str.startswith("Pre")].copy()
+
+
+def _parse_record_str(s):
+    """'6-4' や '2-2-1' を (W, L, T) のタプルに変換"""
+    if pd.isna(s):
+        return (0, 0, 0)
+    s = str(s).strip()
+    if not s:
+        return (0, 0, 0)
+    parts = s.split("-")
+    try:
+        parts = [int(p) for p in parts]
+    except ValueError:
+        return (0, 0, 0)
+    if len(parts) == 2:
+        return parts[0], parts[1], 0
+    elif len(parts) >= 3:
+        return parts[0], parts[1], parts[2]
+    return (0, 0, 0)
+
+
+def _format_record(w, l, t):
+    """(W, L, T) → 'W-L(-T)' 形式の文字列"""
+    return f"{w}-{l}" + (f"-{t}" if t > 0 else "")
+
+
+def _latest_non_null(df, col):
+    """指定カラムの最後の非 NaN / 非空文字を取る"""
+    if col not in df.columns:
+        return ""
+    series = df[col]
+    series = series[series.notna() & (series.astype(str).str.strip() != "")]
+    if series.empty:
+        return ""
+    return series.iloc[-1]
+
+
+def _compute_home_away_played(df, loc, home_col, win_col):
+    """Home / Away 別の戦績を集計（終わった試合だけ）"""
+    if home_col not in df.columns or win_col not in df.columns:
+        return ""
+    sub = df[(df[home_col] == loc) & (df[win_col].isin(["Win", "Lose", "Draw"]))]
+    if sub.empty:
+        return ""
+    wins = (sub[win_col] == "Win").sum()
+    losses = (sub[win_col] == "Lose").sum()
+    ties = (sub[win_col] == "Draw").sum()
+    return _format_record(int(wins), int(losses), int(ties))
+
+
+def _compute_streak_played(df, win_col):
+    """直近の連勝 / 連敗 / 引き分け数を計算 (W2, L3, D1 など)"""
+    if win_col not in df.columns or df.empty:
+        return ""
+    results = [
+        r for r in df[win_col].tolist() if isinstance(r, str) and r.strip() != "" and r in ("Win", "Lose", "Draw")
+    ]
+    if not results:
+        return ""
+    last = results[-1]
+    code_map = {"Win": "W", "Lose": "L", "Draw": "D"}
+    code = code_map.get(last)
+    if not code:
+        return ""
+    count = 0
+    for r in reversed(results):
+        if r == last:
+            count += 1
+        else:
+            break
+    return f"{code}{count}"
+
+
+def _guess_season_year(df):
+    """datetime または 日本語日時カラムからシーズン年を推測"""
+    # 1. datetime カラム（datetime 型）を優先
+    if "datetime" in df.columns:
+        series = df["datetime"].dropna()
+        if not series.empty:
+            first = series.iloc[0]
+            if isinstance(first, datetime):
+                return first.year
+            txt = str(first)
+            for i in range(len(txt) - 3):
+                seg = txt[i : i + 4]
+                if seg.isdigit():
+                    return int(seg)
+
+    # 2. 日本語日時カラムから推測
+    for col in ["試合日時(日本時間)", "試合日時（日本時間）"]:
+        if col in df.columns:
+            series = df[col].dropna()
+            if not series.empty:
+                txt = str(series.iloc[0])
+                for i in range(len(txt) - 3):
+                    seg = txt[i : i + 4]
+                    if seg.isdigit():
+                        return int(seg)
+
+    # 3. どうしても分からない場合は今年
+    return datetime.now().year
+
+
+def build_jax_record_bar(schedule_df):
+    """JAX 戦績バーの HTML を生成（ヘッダーに Division、その他は折りたたみ）"""
+
+    df = schedule_df.copy()
+
+    # カラム名（win/home）は rename 済みのものを優先
+    win_col = "win" if "win" in df.columns else ("Win/Lose" if "Win/Lose" in df.columns else None)
+    home_col = "home" if "home" in df.columns else ("Home/Away" if "Home/Away" in df.columns else None)
+
+    # Win/Lose 情報が無い場合は 0-0 バーだけ出して終了
+    if not win_col:
+        html = """
+<div id="jax-record-bar" class="jax-record-collapsible">
+  <div class="jax-record-inner">
+    <button class="jax-record-main" type="button" aria-expanded="false">
+      <span class="jax-record-team">JAX</span>
+      <span class="jax-record-overall">0-0</span>
+      <span class="jax-record-chevron" aria-hidden="true">▼</span>
+    </button>
+    <div class="jax-record-details">
+      <div class="jax-record-splits"></div>
+    </div>
+  </div>
+</div>""".strip()
+        return html
+
+    # Pre Week を除外
+    reg = _filter_regular(df)
+
+    # 「終わった試合」＝ win_col が入っている行だけ
+    played = reg[reg[win_col].isin(["Win", "Lose", "Draw"])].copy()
+
+    # まだシーズン前なら 0-0 だけ
+    if played.empty:
+        html = """
+<div id="jax-record-bar" class="jax-record-collapsible">
+  <div class="jax-record-inner">
+    <button class="jax-record-main" type="button" aria-expanded="false">
+      <span class="jax-record-team">JAX</span>
+      <span class="jax-record-overall">0-0</span>
+      <span class="jax-record-chevron" aria-hidden="true">▼</span>
+    </button>
+    <div class="jax-record-details">
+      <div class="jax-record-splits"></div>
+    </div>
+  </div>
+</div>""".strip()
+        return html
+
+    # 全体戦績は played から計算
+    wins = (played[win_col] == "Win").sum()
+    losses = (played[win_col] == "Lose").sum()
+    ties = (played[win_col] == "Draw").sum()
+    overall = _format_record(int(wins), int(losses), int(ties))
+
+    # カンファレンス / ディビジョンは played 内で最後の値
+    conf = _latest_non_null(played, "Conference_Record")
+    div = _latest_non_null(played, "Div_Record")
+
+    tw, tl, tt = wins, losses, ties
+    cw, cl, ct = _parse_record_str(conf)
+    nfc = ""
+    if (cw + cl + ct) <= (tw + tl + tt):
+        nfc = _format_record(
+            max(tw - cw, 0),
+            max(tl - cl, 0),
+            max(tt - ct, 0),
+        )
+
+    # Home / Away も played から
+    home = _compute_home_away_played(played, "Home", home_col, win_col) if home_col else ""
+    away = _compute_home_away_played(played, "Away", home_col, win_col) if home_col else ""
+
+    # Streak（W/L/D 連続）
+    streak = _compute_streak_played(played, win_col)
+
+    # ---------- pill を分けて構築 ----------
+    # 常に見せるのは Division だけ
+    division_pill_html = ""
+    if div:
+        division_pill_html = (
+            "<span class='jax-record-pill jax-record-pill-division'>"
+            "<span class='jax-record-label'>Division</span> "
+            f"<span class='jax-record-num'>{div}</span>"
+            "</span>"
+        )
+
+    # 折りたたみ内に入れる pill 達
+    fold_pills = []
+
+    if conf:
+        fold_pills.append(
+            "<span class='jax-record-pill'>"
+            "<span class='jax-record-label'>Conference</span> "
+            f"<span class='jax-record-num'>{conf}</span>"
+            "</span>"
+        )
+    if nfc:
+        fold_pills.append(
+            "<span class='jax-record-pill'>"
+            "<span class='jax-record-label'>NFC</span> "
+            f"<span class='jax-record-num'>{nfc}</span>"
+            "</span>"
+        )
+    if home:
+        fold_pills.append(
+            "<span class='jax-record-pill'>"
+            "<span class='jax-record-label'>Home</span> "
+            f"<span class='jax-record-num'>{home}</span>"
+            "</span>"
+        )
+    if away:
+        fold_pills.append(
+            "<span class='jax-record-pill'>"
+            "<span class='jax-record-label'>Away</span> "
+            f"<span class='jax-record-num'>{away}</span>"
+            "</span>"
+        )
+
+    # Streak：W2+ / L2+ / D2+ を表示
+    if streak and streak[0] in ["W", "L", "D"]:
+        try:
+            n = int(streak[1:])
+        except ValueError:
+            n = 0
+
+        if n >= 2:
+            cls = ["jax-record-streak"]
+            if streak.startswith("L"):
+                cls.append("jax-record-streak-loss")
+            elif streak.startswith("D"):
+                cls.append("jax-record-streak-draw")
+            class_str = " ".join(cls)
+
+            fold_pills.append(
+                f"<span class='jax-record-pill {class_str}'>"
+                "<span class='jax-record-label'>Streak</span> "
+                f"<span class='jax-record-num'>{streak}</span>"
+                "</span>"
+            )
+
+    fold_pills_html = "\n        ".join(fold_pills)
+
+    # ---------- HTML ----------
+    html = f"""
+<div id="jax-record-bar" class="jax-record-collapsible">
+  <div class="jax-record-inner">
+    <button class="jax-record-main" type="button" aria-expanded="false">
+      <span class="jax-record-team">JAX</span>
+      <span class="jax-record-overall">{overall}</span>
+      {division_pill_html}
+      <span class="jax-record-chevron" aria-hidden="true">▼</span>
+    </button>
+    <div class="jax-record-details">
+      <div class="jax-record-splits">
+        {fold_pills_html}
+      </div>
+    </div>
+  </div>
+</div>""".strip()
+    return html
+
+
 # ==== 出力 ====
+# スケジュール + JAX戦績バーをまとめたラッパー
+print("<div id='score-wrapper'>")
+
+# ① スケジュールバー
 print('<div id="score-bar"><div class="schedule-carousel-wrapper">')
 print('<button class="schedule-nav schedule-prev">◀</button>')
 print('<div class="schedule-carousel-viewport"><div class="schedule-carousel">')
 print(build_scorebar_slides_with_date_rules(schedule_df))
-print('</div></div>')
+print("</div></div>")
 print('<button class="schedule-nav schedule-next">▶</button></div></div>')
+
+# ② スケジュールとの区切り線
+print('<div class="header-divider"></div>')
+
+# ③ JAX 戦績バー
+print(build_jax_record_bar(schedule_df))
+
+print("</div>")  # score-wrapper 終わり
