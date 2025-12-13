@@ -1,0 +1,364 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+
+<!-- PC用グローバルメニュー -->
+<nav class="main-navigation">
+  <div class="main-navigation-inner">
+    <ul>
+      <li><a href="/">ホーム</a></li>
+      <li><a href="/archive">アーカイブ</a></li>
+      <li><a href="/archive/category/%E8%A9%A6%E5%90%88%E3%83%97%E3%83%AC%E3%83%93%E3%83%A5%E3%83%BC%E3%83%BB%E3%83%AC%E3%83%93%E3%83%A5%E3%83%BC">試合情報</a></li>
+      <li><a href="/roster">選手情報</a></li>
+      <li><a href="/schedule-2025">スケジュール</a></li>
+      <li class="search-menu">
+    <form method="get" action="/search" class="header-search-form">
+      <input type="text" name="q" placeholder="検索..." />
+    　<button type="submit" class="header-search-button"><i class="fa fa-search"></i></button>
+    </form>
+  </li>
+    </ul>
+  </div>
+</nav>
+
+<!-- 🆕 スマホ専用検索バー -->
+<div class="mobile-search-bar" id="mobileSearchBar">
+  <form method="get" action="/search" class="header-search-form">
+    <input type="text" name="q" placeholder="ブログ内検索" />
+    <button type="submit" class="header-search-button"><i class="fa fa-search"></i></button>
+  </form>
+</div>
+
+<!-- スマホ用ボトムメニュー -->
+<nav class="bottom-nav">
+  <a href="/"><i class="fa fa-home"></i><span>ホーム</span></a>
+  <a href="/archive"><i class="fa fa-archive"></i><span>アーカイブ</span></a>
+  <a href="/roster"><i class="fa fa-users"></i><span>選手</span></a>
+  <a href="/schedule-2025"><i class="fa-regular fa-calendar"></i><span>日程</span></a>
+  <a href="javascript:void(0);" onclick="toggleSearchBar()"><i class="fa fa-search"></i><span>検索</span></a>
+  <a href="javascript:void(0);" id="scroll-top-button" class="nav-top"><i class="fa fa-chevron-up"></i><span>TOP</span></a>
+</nav>
+
+<!-- スケジュール -->
+<div id='score-wrapper'>
+<div id="score-bar"><div class="schedule-carousel-wrapper">
+<button class="schedule-nav schedule-prev">◀</button>
+<div class="schedule-carousel-viewport"><div class="schedule-carousel">
+<div class='schedule-slide loss' data-date='2025-08-10T08:00:00'>
+  <div class='line1'><span class='week'>Pre Week1</span>　8/10 (Sun) 08:00 JST</div>
+  <div class='line2'>
+    <span class='opponent'>
+      <span class='venue home'>vs</span>
+      <span class='team-badge' style='background: #101820; color: #FFB612;'>PIT</span>
+    </span>
+    <span class='result'>L 31-25</span>
+  </div>
+</div>
+
+<div class='schedule-slide draw' data-date='2025-08-18T02:00:00'>
+  <div class='line1'><span class='week'>Pre Week2</span>　8/18 (Mon) 02:00 JST</div>
+  <div class='line2'>
+    <span class='opponent'>
+      <span class='venue away'>@</span>
+      <span class='team-badge' style='background: #D3BC8D; color: #101820;'>NO</span>
+    </span>
+    <span class='result'>D 17-17</span>
+  </div>
+</div>
+
+<div class='schedule-slide loss' data-date='2025-08-24T08:00:00'>
+  <div class='line1'><span class='week'>Pre Week3</span>　8/24 (Sun) 08:00 JST</div>
+  <div class='line2'>
+    <span class='opponent'>
+      <span class='venue away'>@</span>
+      <span class='team-badge' style='background: #008E97; color: #FC4C02;'>MIA</span>
+    </span>
+    <span class='result'>L 6-14</span>
+  </div>
+</div>
+
+<div class='schedule-slide win' data-date='2025-09-08T02:00:00'>
+  <div class='line1'><span class='week'>Week1</span>　9/8 (Mon) 02:00 JST</div>
+  <div class='line2'>
+    <span class='opponent'>
+      <span class='venue home'>vs</span>
+      <span class='team-badge' style='background: #0085CA; color: #101820;'>CAR</span>
+    </span>
+    <span class='result'>W 10-26</span>
+  </div>
+</div>
+
+<div class='schedule-slide loss' data-date='2025-09-15T02:00:00'>
+  <div class='line1'><span class='week'>Week2</span>　9/15 (Mon) 02:00 JST</div>
+  <div class='line2'>
+    <span class='opponent'>
+      <span class='venue away'>@</span>
+      <span class='team-badge' style='background: #FB4F14; color: #000000;'>CIN</span>
+    </span>
+    <span class='result'>L 27-31</span>
+  </div>
+</div>
+
+<div class='schedule-slide win' data-date='2025-09-22T02:00:00'>
+  <div class='line1'><span class='week'>Week3</span>　9/22 (Mon) 02:00 JST</div>
+  <div class='line2'>
+    <span class='opponent'>
+      <span class='venue home'>vs</span>
+      <span class='team-badge' style='background: #03202F; color: #A71930;'>HOU</span>
+    </span>
+    <span class='result'>W 10-17</span>
+  </div>
+</div>
+
+<div class='schedule-slide win' data-date='2025-09-29T05:05:00'>
+  <div class='line1'><span class='week'>Week4</span>　9/29 (Mon) 05:05 JST</div>
+  <div class='line2'>
+    <span class='opponent'>
+      <span class='venue away'>@</span>
+      <span class='team-badge' style='background: #B3995D; color: #AA0000;'>SF</span>
+    </span>
+    <span class='result'>W 26-21</span>
+  </div>
+</div>
+
+<div class='schedule-slide win' data-date='2025-10-07T09:15:00'>
+  <div class='line1'><span class='week'>Week5</span>　10/7 (Tue) 09:15 JST</div>
+  <div class='line2'>
+    <span class='opponent'>
+      <span class='venue home'>vs</span>
+      <span class='team-badge' style='background: #E31837; color: #FFB81C;'>KC</span>
+    </span>
+    <span class='result'>W 28-31</span>
+  </div>
+</div>
+
+<div class='schedule-slide loss' data-date='2025-10-13T02:00:00'>
+  <div class='line1'><span class='week'>Week6</span>　10/13 (Mon) 02:00 JST</div>
+  <div class='line2'>
+    <span class='opponent'>
+      <span class='venue home'>vs</span>
+      <span class='team-badge' style='background: #002244; color: #69BE28;'>SEA</span>
+    </span>
+    <span class='result'>L 20-12</span>
+  </div>
+</div>
+
+<div class='schedule-slide loss' data-date='2025-10-19T22:30:00'>
+  <div class='line1'><span class='week'>Week7</span>　10/19 (Sun) 22:30 JST</div>
+  <div class='line2'>
+    <span class='opponent'>
+      <span class='venue home'>vs</span>
+      <span class='team-badge' style='background: #003594; color: #FFA300;'>LAR</span>
+    </span>
+    <span class='result'>L 35-7</span>
+  </div>
+</div>
+
+<div class='schedule-slide bye' data-date=''>
+  <div class='line1'><span class='week'>Week8</span></div>
+  <div class='line2'>
+    <span class='opponent'>BYE</span>
+  </div>
+</div>
+
+<div class='schedule-slide win' data-date='2025-11-02T06:05:00'>
+  <div class='line1'><span class='week'>Week9</span>　11/2 (Sun) 06:05 JST</div>
+  <div class='line2'>
+    <span class='opponent'>
+      <span class='venue away'>@</span>
+      <span class='team-badge' style='background: #000000; color: #A5ACAF;'>LV</span>
+    </span>
+    <span class='result'>W 30-29</span>
+  </div>
+</div>
+
+<div class='schedule-slide loss' data-date='2025-11-10T03:00:00'>
+  <div class='line1'><span class='week'>Week10</span>　11/10 (Mon) 03:00 JST</div>
+  <div class='line2'>
+    <span class='opponent'>
+      <span class='venue away'>@</span>
+      <span class='team-badge' style='background: #03202F; color: #A71930;'>HOU</span>
+    </span>
+    <span class='result'>L 29-36</span>
+  </div>
+</div>
+
+<div class='schedule-slide win' data-date='2025-11-17T03:00:00'>
+  <div class='line1'><span class='week'>Week11</span>　11/17 (Mon) 03:00 JST</div>
+  <div class='line2'>
+    <span class='opponent'>
+      <span class='venue home'>vs</span>
+      <span class='team-badge' style='background: #0080C6; color: #FFC20E;'>LAC</span>
+    </span>
+    <span class='result'>W 6-35</span>
+  </div>
+</div>
+
+<div class='schedule-slide win' data-date='2025-11-24T06:05:00'>
+  <div class='line1'><span class='week'>Week12</span>　11/24 (Mon) 06:05 JST</div>
+  <div class='line2'>
+    <span class='opponent'>
+      <span class='venue away'>@</span>
+      <span class='team-badge' style='background: #97233F; color: #ffffff;'>ARI</span>
+    </span>
+    <span class='result'>W 27-24</span>
+  </div>
+</div>
+
+<div class='schedule-slide win' data-date='2025-12-01T03:00:00'>
+  <div class='line1'><span class='week'>Week13</span>　12/1 (Mon) 03:00 JST</div>
+  <div class='line2'>
+    <span class='opponent'>
+      <span class='venue away'>@</span>
+      <span class='team-badge' style='background: #0C2340; color: #4B92DB;'>TEN</span>
+    </span>
+    <span class='result'>W 25-3</span>
+  </div>
+</div>
+
+<div class='schedule-slide win' data-date='2025-12-08T03:00:00'>
+  <div class='line1'><span class='week'>Week14</span>　12/8 (Mon) 03:00 JST</div>
+  <div class='line2'>
+    <span class='opponent'>
+      <span class='venue home'>vs</span>
+      <span class='team-badge' style='background: #002C5F; color: #ffffff;'>IND</span>
+    </span>
+    <span class='result'>W 19-36</span>
+  </div>
+</div>
+
+<div class='schedule-slide next-game' data-date='2025-12-15T03:00:00'>
+  <div class='line1'><span class='week'>Week15</span>　12/15 (Mon) 03:00 JST</div>
+  <div class='line2'>
+    <span class='opponent'>
+      <span class='venue home'>vs</span>
+      <span class='team-badge' style='background: #125740; color: #ffffff;'>NYJ</span>
+    </span>
+    <span class='result'>-</span>
+  </div>
+</div>
+
+<div class='schedule-slide upcoming' data-date='2025-12-22T06:05:00'>
+  <div class='line1'><span class='week'>Week16</span>　12/22 (Mon) 06:05 JST</div>
+  <div class='line2'>
+    <span class='opponent'>
+      <span class='venue away'>@</span>
+      <span class='team-badge' style='background: #FB4F14; color: #002244;'>DEN</span>
+    </span>
+    <span class='result'>-</span>
+  </div>
+</div>
+
+<div class='schedule-slide upcoming' data-date='2025-12-29T03:00:00'>
+  <div class='line1'><span class='week'>Week17</span>　12/29 (Mon) 03:00 JST</div>
+  <div class='line2'>
+    <span class='opponent'>
+      <span class='venue away'>@</span>
+      <span class='team-badge' style='background: #002C5F; color: #ffffff;'>IND</span>
+    </span>
+    <span class='result'>-</span>
+  </div>
+</div>
+
+<div class='schedule-slide upcoming' data-date=''>
+  <div class='line1'><span class='week'>Week18</span>　TBD</div>
+  <div class='line2'>
+    <span class='opponent'>
+      <span class='venue home'>vs</span>
+      <span class='team-badge' style='background: #0C2340; color: #4B92DB;'>TEN</span>
+    </span>
+    <span class='result'>-</span>
+  </div>
+</div>
+</div></div>
+<button class="schedule-nav schedule-next">▶</button></div></div>
+<div class="header-divider"></div>
+<div id="jax-record-bar" class="jax-record-collapsible">
+  <div class="jax-record-inner">
+    <button class="jax-record-main" type="button" aria-expanded="false">
+      <span class="jax-record-team">JAX</span>
+      <span class="jax-record-overall">9-4</span>
+      <span class='jax-record-pill jax-record-pill-division'><span class='jax-record-label'>Division</span> <span class='jax-record-num'>3-1</span></span>
+      <span class="jax-record-chevron" aria-hidden="true">▼</span>
+    </button>
+    <div class="jax-record-details">
+      <div class="jax-record-splits">
+        <span class='jax-record-pill'><span class='jax-record-label'>Conference</span> <span class='jax-record-num'>6-2</span></span>
+        <span class='jax-record-pill'><span class='jax-record-label'>NFC</span> <span class='jax-record-num'>3-2</span></span>
+        <span class='jax-record-pill'><span class='jax-record-label'>Home</span> <span class='jax-record-num'>5-2</span></span>
+        <span class='jax-record-pill'><span class='jax-record-label'>Away</span> <span class='jax-record-num'>4-2</span></span>
+        <span class='jax-record-pill jax-record-streak'><span class='jax-record-label'>Streak</span> <span class='jax-record-num'>W4</span></span>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+
+
+
+<!-- News -->
+<div id="news-bar" class="newsbar-b">
+  <div class="newsbar-b-inner">
+    <span class="newsbar-b-label">NEWS</span>
+    <div class="newsbar-b-viewport">
+      <ul class="newsbar-b-list js-newsbar-b-list">
+        <!-- generate_news.py が吐いた <li> が入る -->
+        
+
+
+        
+
+        <li class="newsbar-b-item">
+          <span class="newsbar-b-date">12/7</span>
+          <span class="newsbar-b-type newsbar-b-type--roster-move">Roster Move</span>
+          <a href="https://x.com/Jaguars/status/1997417035379118473?s=20" class="newsbar-b-title">RB Cody Schraderをwaive</a>
+        </li>
+        <li class="newsbar-b-item">
+          <span class="newsbar-b-date">12/7</span>
+          <span class="newsbar-b-type newsbar-b-type--injury">Injury</span>
+          <a href="https://x.com/Jaguars/status/1997417035379118473?s=20" class="newsbar-b-title">S Eric MurrayがIRから復帰</a>
+        </li>
+        <li class="newsbar-b-item">
+          <span class="newsbar-b-date">12/4</span>
+          <span class="newsbar-b-type newsbar-b-type--roster-move">Roster Move</span>
+          <a href="https://x.com/Jaguars/status/1996242182689145017?s=20" class="newsbar-b-title">DL Matt DickersonをActive Rosterに昇格、WR Austin TrammellとPS契約</a>
+        </li>
+        <li class="newsbar-b-item">
+          <span class="newsbar-b-date">12/2</span>
+          <span class="newsbar-b-type newsbar-b-type--roster-move">Roster Move</span>
+          <a href="https://x.com/Jaguars/status/1995600029776781702?t=4bRD7aEbn4lWy2Xg5pox4w&amp;s=19" class="newsbar-b-title">WR Austin Trammellをwaive</a>
+        </li>
+        <li class="newsbar-b-item">
+          <span class="newsbar-b-date">11/27</span>
+          <span class="newsbar-b-type newsbar-b-type--roster-move">Roster Move</span>
+          <a href="https://x.com/Jaguars/status/1993707607807451177?s=20" class="newsbar-b-title">S Trevian ThomasとPS契約</a>
+        </li>
+        <li class="newsbar-b-item">
+          <span class="newsbar-b-date">11/27</span>
+          <span class="newsbar-b-type newsbar-b-type--injury">Injury</span>
+          <a href="https://x.com/Jaguars/status/1993707607807451177?s=20" class="newsbar-b-title">S Eric MurrayをIR-DFRに登録し、練習復帰ウィンドウを開始</a>
+        </li>
+        <li class="newsbar-b-item">
+          <span class="newsbar-b-date">11/24</span>
+          <span class="newsbar-b-type newsbar-b-type--news">News</span>
+          <a href="https://x.com/JaguarsPR/status/1992702365355679849?s=20" class="newsbar-b-title">LB Foye Oluokunがキャリア1000タックルを達成</a>
+        </li>
+        <li class="newsbar-b-item">
+          <span class="newsbar-b-date">11/23</span>
+          <span class="newsbar-b-type newsbar-b-type--injury">Injury</span>
+          <a href="https://x.com/Jaguars/status/1992338188342575130?s=20" class="newsbar-b-title">TE Brenton StrangeがIRから復帰</a>
+        </li>
+        <li class="newsbar-b-item">
+          <span class="newsbar-b-date">11/18</span>
+          <span class="newsbar-b-type newsbar-b-type--roster-move">Roster Move</span>
+          <a href="https://x.com/Jaguars/status/1990517447523512787?s=20" class="newsbar-b-title">S Kahlef Hailassieをwaive</a>
+        </li>
+        <li class="newsbar-b-item">
+          <span class="newsbar-b-date">11/17</span>
+          <span class="newsbar-b-type newsbar-b-type--news">News</span>
+          <a href="https://x.com/Jaguars/status/1990130706085728326?s=20" class="newsbar-b-title">EDGE Josh Hines-Allenがサック数のフランチャイズ記録を更新</a>
+        </li>
+
+      </ul>
+    </div>
+  </div>
+</div>
