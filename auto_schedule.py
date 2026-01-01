@@ -17,14 +17,12 @@ HATENA_USER = os.getenv("HATENA_USER")
 HATENA_BLOG = os.getenv("HATENA_BLOG")
 HATENA_API_KEY = os.getenv("HATENA_API_KEY")
 HATENA_SCHEDULE_PAGE_ID = os.getenv("HATENA_SCHEDULE_PAGE_ID")
-# 【追加】ヘッダーデータ供給用の隠しページID
+# ヘッダーデータ供給用の隠しページID
 HATENA_LATEST_SCHEDULE_PAGE_ID = os.getenv("HATENA_LATEST_SCHEDULE_PAGE_ID")
 
-# パス設定
 script_dir = os.path.dirname(os.path.abspath(__file__))
 color_path = os.path.join(script_dir, "team_color.xlsx")
 
-# チーム情報マップ
 TEAM_INFO = {
     "JAX": ("AFC", "South"),
     "HOU": ("AFC", "South"),
@@ -63,7 +61,7 @@ JAX_CONF, JAX_DIV = "AFC", "South"
 POSTSEASON_WEEKS = ["WC", "DIV", "CONF", "SB"]
 
 # ==========================================
-# 2. ロジック関数群（元のまま1文字も変えていません）
+# 2. ロジック関数群（しょうさんの「できていた」コードを完全復元）
 # ==========================================
 
 
@@ -145,7 +143,13 @@ def build_schedule_record_bar(schedule_df):
             f"<span class='{cls}'><span class='jax-record-label'>Streak</span> <span class='jax-record-num'>{streak}</span></span>"
         )
 
-    return f"""<div id="schedule-record-bar"><div class="jax-record-inner"><div class="jax-record-main"><span class="jax-record-team">JAX</span> <span class="jax-record-overall">{overall}</span> {div_pill}</div><div class="jax-record-splits">{' '.join(pills)}</div></div></div>""".strip()
+    return f"""
+<div id="schedule-record-bar">
+  <div class="jax-record-inner">
+    <div class="jax-record-main"><span class="jax-record-team">JAX</span> <span class="jax-record-overall">{overall}</span> {div_pill}</div>
+    <div class="jax-record-splits">{' '.join(pills)}</div>
+  </div>
+</div>""".strip()
 
 
 def build_pc_table(df):
@@ -173,7 +177,7 @@ def build_mobile_table(df):
     return html + "</tbody></table></div>"
 
 
-# --- 【新設】ヘッダー専用パーツ（これらはメインページには影響しません） ---
+# --- 【新設】ヘッダー専用パーツ（他ページ用） ---
 def build_header_score_carousel(df):
     slides = ""
     for _, r in df.iterrows():
@@ -187,25 +191,15 @@ def build_header_score_carousel(df):
     return f"<button class='schedule-nav schedule-prev'>◀</button><div class='schedule-carousel-viewport'><div class='schedule-carousel'>{slides}</div></div><button class='schedule-nav schedule-next'>▶</button>"
 
 
-def build_header_collapsible_record(schedule_df):
-    # メイン用record_barのロジックを流用し、ヘッダー用の「開閉式HTML」を組み立てる
-    s = schedule_df["week"].astype(str)
-    reg = schedule_df[~s.str.startswith("Pre") & ~schedule_df["week"].isin(POSTSEASON_WEEKS)].copy()
-    played = reg[reg["win"].isin(["Win", "Lose", "Draw"])].copy()
+def build_header_collapsible_record(df):
+    # ヘッダー用のコンパクトな開閉式HTML
+    played = df[~df["week"].astype(str).str.startswith("Pre") & df["win"].isin(["Win", "Lose", "Draw"])]
     overall = _count_record_schedule(played) if not played.empty else "0-0"
-    div_record = _count_record_schedule(
-        played[(played["opponent"].map(lambda t: TEAM_INFO.get(str(t), (None, None))[1]) == JAX_DIV)]
-    )
-    div_pill = (
-        f"<span class='jax-record-pill jax-record-pill-division'><span class='jax-record-label'>Div</span> <span class='jax-record-num'>{div_record}</span></span>"
-        if div_record
-        else ""
-    )
-    return f"""<div id="jax-record-bar" class="jax-record-collapsible"><div class="jax-record-inner"><button class="jax-record-main" type="button" aria-expanded="false"><span class="jax-record-team">JAX</span><span class="jax-record-overall">{overall}</span>{div_pill}<span class="jax-record-chevron">▼</span></button><div class="jax-record-details"><div class="jax-record-splits"></div></div></div></div>"""
+    return f"""<div id="jax-record-bar" class="jax-record-collapsible"><div class="jax-record-inner"><button class="jax-record-main" type="button" aria-expanded="false"><span class="jax-record-team">JAX</span><span class="jax-record-overall">{overall}</span><span class="jax-record-chevron">▼</span></button><div class="jax-record-details"><div class="jax-record-splits"></div></div></div></div>"""
 
 
 # ==========================================
-# 3. メイン処理
+# 3. 通信・メイン処理
 # ==========================================
 
 
@@ -221,20 +215,32 @@ def fetch_from_notion():
     rows = []
     for page in res.json()["results"]:
         p = page["properties"]
-        dt_prop = p.get("試合日時（日本時間）", {}).get("date")
-        team_obj = p.get("チーム", {}).get("select")
-        ha_obj = p.get("Home/Away", {}).get("select")
-        win_obj = p.get("Win/Lose", {}).get("select")
-        score_list = p.get("Score", {}).get("rich_text", [])
-        week_list = p.get("Week", {}).get("title", [])
         rows.append(
             {
-                "week": week_list[0].get("plain_text", "") if week_list else "",
-                "opponent": team_obj.get("name") if team_obj else "BYE",
-                "home": ha_obj.get("name") if ha_obj else "",
-                "score": score_list[0].get("plain_text", "-") if score_list else "-",
-                "win": win_obj.get("name") if win_obj else "",
-                "試合日時（日本時間）": dt_prop["start"] if dt_prop else "",
+                "week": (
+                    p.get("Week", {}).get("title", [])[0].get("plain_text", "")
+                    if p.get("Week", {}).get("title")
+                    else ""
+                ),
+                "opponent": (
+                    p.get("チーム", {}).get("select", {}).get("name") if p.get("チーム", {}).get("select") else "BYE"
+                ),
+                "home": (
+                    p.get("Home/Away", {}).get("select", {}).get("name") if p.get("Home/Away", {}).get("select") else ""
+                ),
+                "score": (
+                    p.get("Score", {}).get("rich_text", [])[0].get("plain_text", "-")
+                    if p.get("Score", {}).get("rich_text")
+                    else "-"
+                ),
+                "win": (
+                    p.get("Win/Lose", {}).get("select", {}).get("name") if p.get("Win/Lose", {}).get("select") else ""
+                ),
+                "試合日時（日本時間）": (
+                    p.get("試合日時（日本時間）", {}).get("date", {}).get("start")
+                    if p.get("試合日時（日本時間）", {}).get("date")
+                    else ""
+                ),
                 "sort_no": p.get("Sort No", {}).get("number") or 999,
             }
         )
@@ -243,11 +249,9 @@ def fetch_from_notion():
 
 def main():
     try:
-        print("🏈 Notionからデータを取得中...")
         df = fetch_from_notion()
         colors_df = pd.read_excel(color_path)
         df = df.sort_values("sort_no").reset_index(drop=True)
-
         raw_dates = df["試合日時（日本時間）"].fillna("").astype(str)
         df["datetime"] = pd.to_datetime(
             raw_dates.str.replace(r"\s*\(.*\)", "", regex=True).str.strip(), errors="coerce"
@@ -257,8 +261,7 @@ def main():
 
         dt_str_list = []
         for i, row in df.iterrows():
-            raw_val = str(row["試合日時（日本時間）"])
-            dt_obj = row["datetime"]
+            raw_val, dt_obj = str(row["試合日時（日本時間）"]), row["datetime"]
             if pd.isna(dt_obj) or not raw_val or raw_val == "None":
                 dt_str_list.append("TBD")
             elif "T" in raw_val or ":" in raw_val:
@@ -266,41 +269,35 @@ def main():
             else:
                 dt_str_list.append(dt_obj.strftime("%Y/%m/%d") + " TBD")
         df["datetime_str"] = dt_str_list
-
         df["result"] = df["win"].map({"Win": "W", "Lose": "L", "Draw": "D"}).fillna("-")
         df["venue_class"] = df["home"].map({"Home": "home", "Away": "away"}).fillna("")
         df["score"] = df["score"].fillna("-")
         df["class"] = df["result"].map({"W": "win", "L": "loss", "D": "draw"}).fillna("upcoming")
-
         future = df[(df["datetime"] > pd.Timestamp.today()) & (df["score"] == "-")]
         if not future.empty:
             df.loc[future["datetime"].idxmin(), "class"] = "next-game"
-
         bye_mask = df["opponent"].str.upper() == "BYE"
         df.loc[bye_mask, ["datetime_str", "score", "result"]] = ""
         df.loc[bye_mask, "class"] = "bye"
-
         colors_df = colors_df.rename(columns={"Team": "opponent", "Color 1": "bg", "Color 2": "fg"})
         df = pd.merge(df, colors_df, on="opponent", how="left")
         df["date"] = df["datetime"].dt.strftime("%Y/%m/%d")
         df["time"] = df["datetime"].dt.strftime("%H:%M")
 
-        # --- 1. メインの「2025 Game Schedule」用HTML構築 (元のロジックそのまま) ---
+        # --- A. メインページ (2025 Game Schedule) ---
         full_html = build_schedule_record_bar(df)
-        pre_df = df[df["week"].astype(str).str.startswith("Pre")]
-        reg_df = df[~df["week"].astype(str).str.startswith("Pre") & ~df["week"].isin(POSTSEASON_WEEKS)]
-        post_df = df[df["week"].isin(POSTSEASON_WEEKS)]
+        pre_df, post_df = df[df["week"].str.startswith("Pre")], df[df["week"].isin(POSTSEASON_WEEKS)]
+        reg_df = df[~df["week"].str.startswith("Pre") & ~df["week"].isin(POSTSEASON_WEEKS)]
 
         full_html += '<div class="tab-buttons">'
-        tabs = [
+        for pc, sp, tid, d in [
             ("Preseason", "PRE", "pre", pre_df),
             ("Regular Season", "RS", "reg", reg_df),
             ("Postseason", "POST", "post", post_df),
-        ]
-        for pc_lbl, sp_lbl, tid, d in tabs:
+        ]:
             if tid == "post" and d.empty:
                 continue
-            full_html += f'<button class="tab-btn" data-sp="{sp_lbl}" data-target="{tid}">{pc_lbl}</button>'
+            full_html += f'<button class="tab-btn" data-sp="{sp}" data-target="{tid}">{pc}</button>'
         full_html += "</div>"
         for tid, d in [("pre", pre_df), ("reg", reg_df), ("post", post_df)]:
             if tid == "post" and d.empty:
@@ -310,16 +307,13 @@ def main():
         full_html += """<script>
 document.addEventListener("DOMContentLoaded", function () {
     const now = new Date(); const month = now.getMonth() + 1;
-    let defaultTab = "reg"; 
-    const hasPost = document.getElementById("post") !== null; 
-    const hasPre = document.getElementById("pre") !== null;
+    let defaultTab = "reg"; const hasPost = document.getElementById("post") !== null; const hasPre = document.getElementById("pre") !== null;
     if (month >= 5 && month <= 8 && hasPre) defaultTab = "pre";
     else if ((month === 1 || month === 2) && hasPost) defaultTab = "post";
     else if (!document.getElementById(defaultTab)) { if (hasPost) defaultTab = "post"; else if (hasPre) defaultTab = "pre"; }
     document.querySelectorAll(".tab-content").forEach(tab => { tab.style.display = "none"; });
     document.querySelectorAll(".tab-btn").forEach(btn => {
-        btn.classList.remove("active");
-        if (btn.dataset.target === defaultTab) btn.classList.add("active");
+        btn.classList.remove("active"); if (btn.dataset.target === defaultTab) btn.classList.add("active");
     });
     const def = document.getElementById(defaultTab); if (def) def.style.display = "block";
     document.querySelectorAll(".tab-btn").forEach(button => {
@@ -335,8 +329,11 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 </script>"""
 
-        # --- 2. 隠しページ更新 (2ページ目) ---
-        def get_hatena_wsse():
+        # --- B. 隠しSnippetページ ---
+        snippet_html = f'<div id="score-data-source">{build_header_score_carousel(df)}</div><div id="record-data-source">{build_header_collapsible_record(df)}</div>'
+
+        # 送信処理
+        def get_wsse():
             wsse_created = datetime.datetime.now().isoformat() + "Z"
             nonce = hashlib.sha1(str(random.random()).encode()).digest()
             digest = base64.b64encode(
@@ -344,32 +341,28 @@ document.addEventListener("DOMContentLoaded", function () {
             ).decode()
             return f'UsernameToken Username="{HATENA_USER}", PasswordDigest="{digest}", Nonce="{base64.b64encode(nonce).decode()}", Created="{wsse_created}"'
 
-        # スケジュールページ(メイン)更新
-        url_main = f"https://blog.hatena.ne.jp/{HATENA_USER}/{HATENA_BLOG}/atom/page/{HATENA_SCHEDULE_PAGE_ID}"
-        xml_main = f'<?xml version="1.0" encoding="utf-8"?><entry xmlns="http://www.w3.org/2005/Atom"><title>2025 Game Schedule</title><content type="text/html">{escape(full_html)}</content></entry>'
+        # メインページ更新
         requests.put(
-            url_main,
-            data=xml_main.encode("utf-8"),
-            headers={"X-WSSE": get_hatena_wsse(), "Content-Type": "application/xml"},
+            f"https://blog.hatena.ne.jp/{HATENA_USER}/{HATENA_BLOG}/atom/page/{HATENA_SCHEDULE_PAGE_ID}",
+            data=f'<?xml version="1.0" encoding="utf-8"?><entry xmlns="http://www.w3.org/2005/Atom"><title>2025 Game Schedule</title><content type="text/html">{escape(full_html)}</content></entry>'.encode(
+                "utf-8"
+            ),
+            headers={"X-WSSE": get_wsse(), "Content-Type": "application/xml"},
         )
-        print("✅ Main Schedule Page Updated.")
 
-        # 隠しSnippetページ更新
+        # 隠しページ更新
         if HATENA_LATEST_SCHEDULE_PAGE_ID:
-            snippet_html = f'<div id="score-data-source">{build_header_score_carousel(df)}</div><div id="record-data-source">{build_header_collapsible_record(df)}</div>'
-            url_snippet = (
-                f"https://blog.hatena.ne.jp/{HATENA_USER}/{HATENA_BLOG}/atom/page/{HATENA_LATEST_SCHEDULE_PAGE_ID}"
-            )
-            xml_snippet = f'<?xml version="1.0" encoding="utf-8"?><entry xmlns="http://www.w3.org/2005/Atom"><title>LATEST_DATA_SNIPPET</title><content type="text/html">{escape(snippet_html)}</content></entry>'
             requests.put(
-                url_snippet,
-                data=xml_snippet.encode("utf-8"),
-                headers={"X-WSSE": get_hatena_wsse(), "Content-Type": "application/xml"},
+                f"https://blog.hatena.ne.jp/{HATENA_USER}/{HATENA_BLOG}/atom/page/{HATENA_LATEST_SCHEDULE_PAGE_ID}",
+                data=f'<?xml version="1.0" encoding="utf-8"?><entry xmlns="http://www.w3.org/2005/Atom"><title>LATEST_DATA</title><content type="text/html">{escape(snippet_html)}</content></entry>'.encode(
+                    "utf-8"
+                ),
+                headers={"X-WSSE": get_wsse(), "Content-Type": "application/xml"},
             )
-            print("✅ Header Snippet Page Updated.")
 
+        print("✨ すべての更新に成功しました。")
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"❌ エラー: {e}")
 
 
 if __name__ == "__main__":
