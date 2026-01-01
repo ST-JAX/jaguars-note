@@ -66,7 +66,7 @@ JAX_CONF, JAX_DIV = "AFC", "South"
 POSTSEASON_WEEKS = ["WC", "DIV", "CONF", "SB"]
 
 # ==========================================
-# 2. ロジック関数群
+# 2. ロジック関数群（戦績計算）
 # ==========================================
 
 
@@ -96,7 +96,7 @@ def _compute_streak_schedule(df):
     return f"{code}{count}"
 
 
-# --- A. スケジュールページ専用（ID: schedule-record-bar） ---
+# --- スケジュールページ専用の戦績バー（固定デザイン） ---
 def build_main_page_record_bar(schedule_df):
     s = schedule_df["week"].astype(str)
     reg = schedule_df[~s.str.startswith("Pre") & ~schedule_df["week"].isin(POSTSEASON_WEEKS)].copy()
@@ -143,16 +143,10 @@ def build_main_page_record_bar(schedule_df):
             f"<span class='jax-record-pill jax-record-streak'><span class='jax-record-label'>Streak</span> <span class='jax-record-num'>{streak}</span></span>"
         )
 
-    return f"""
-<div id="schedule-record-bar">
-  <div class="jax-record-inner">
-    <div class="jax-record-main"><span class="jax-record-team">JAX</span> <span class="jax-record-overall">{overall}</span> {div_pill}</div>
-    <div class="jax-record-splits">{' '.join(pills)}</div>
-  </div>
-</div>""".strip()
+    return f"""<div id="schedule-record-bar"><div class="jax-record-inner"><div class="jax-record-main"><span class="jax-record-team">JAX</span> <span class="jax-record-overall">{overall}</span> {div_pill}</div><div class="jax-record-splits">{' '.join(pills)}</div></div></div>"""
 
 
-# --- B. ヘッダー専用（ID: jax-record-bar, 開閉式） ---
+# --- ヘッダー専用の戦績バー（開閉式デザイン） ---
 def build_header_record_bar(schedule_df):
     s = schedule_df["week"].astype(str)
     reg = schedule_df[~s.str.startswith("Pre") & ~schedule_df["week"].isin(POSTSEASON_WEEKS)].copy()
@@ -162,60 +156,31 @@ def build_header_record_bar(schedule_df):
     conf_div_df.columns = ["_opp_conf", "_opp_div"]
     played = played.join(conf_div_df)
     div_record = _count_record_schedule(played[(played["_opp_conf"] == JAX_CONF) & (played["_opp_div"] == JAX_DIV)])
-
     div_pill = (
         f"<span class='jax-record-pill jax-record-pill-division'><span class='jax-record-label'>Div</span> <span class='jax-record-num'>{div_record}</span></span>"
         if div_record
         else ""
     )
-
     pills = []
     conf_r = _count_record_schedule(played[played["_opp_conf"] == JAX_CONF])
-    if conf_r:
-        pills.append(
-            f"<span class='jax-record-pill'><span class='jax-record-label'>Conf</span> <span class='jax-record-num'>{conf_r}</span></span>"
-        )
+    pills.append(
+        f"<span class='jax-record-pill'><span class='jax-record-label'>Conf</span> <span class='jax-record-num'>{conf_r}</span></span>"
+    )
     home_r = _count_record_schedule(played[played["home"] == "Home"])
-    if home_r:
-        pills.append(
-            f"<span class='jax-record-pill'><span class='jax-record-label'>Home</span> <span class='jax-record-num'>{home_r}</span></span>"
-        )
+    pills.append(
+        f"<span class='jax-record-pill'><span class='jax-record-label'>Home</span> <span class='jax-record-num'>{home_r}</span></span>"
+    )
     streak = _compute_streak_schedule(played)
-    if streak:
-        pills.append(
-            f"<span class='jax-record-pill jax-record-streak'><span class='jax-record-label'>Streak</span> <span class='jax-record-num'>{streak}</span></span>"
-        )
+    pills.append(
+        f"<span class='jax-record-pill jax-record-streak'><span class='jax-record-label'>Streak</span> <span class='jax-record-num'>{streak}</span></span>"
+    )
 
-    return f"""
-<div id="jax-record-bar" class="jax-record-collapsible">
-  <div class="jax-record-inner">
-    <button class="jax-record-main" type="button" aria-expanded="false">
-      <span class="jax-record-team">JAX</span><span class="jax-record-overall">{overall}</span>{div_pill}<span class="jax-record-chevron">▼</span>
-    </button>
-    <div class="jax-record-details"><div class="jax-record-splits">{' '.join(pills)}</div></div>
-  </div>
-</div>"""
+    return f"""<div id="jax-record-bar" class="jax-record-collapsible"><div class="jax-record-inner"><button class="jax-record-main" type="button" aria-expanded="false"><span class="jax-record-team">JAX</span><span class="jax-record-overall">{overall}</span>{div_pill}<span class="jax-record-chevron">▼</span></button><div class="jax-record-details"><div class="jax-record-splits">{''.join(pills)}</div></div></div></div>"""
 
 
-def build_carousel_slides(df):
-    slides_html = '<div class="schedule-carousel">'
-    for _, r in df.iterrows():
-        if str(r["opponent"]).upper() == "BYE":
-            slides_html += f"<div class='schedule-slide bye' data-date=''><div class='line1'><span class='week'>{r['week']}</span></div><div class='line2'><span class='opponent'>BYE</span></div></div>"
-        else:
-            dt_obj = r["datetime"]
-            dt_display = dt_obj.strftime("%-m/%-d (%a) %H:%M JST") if not pd.isna(dt_obj) else "TBD"
-            sym = "vs" if r["venue_class"] == "home" else "@"
-            slides_html += f"""
-<div class='schedule-slide {r['class']}' data-date='{r['試合日時（日本時間）']}'>
-  <div class='line1'><span class='week'>{r['week']}</span>　{dt_display}</div>
-  <div class='line2'>
-    <span class='opponent'><span class='venue {r['venue_class']}'>{sym}</span><span class='team-badge' style='background:{r.get("bg","#ccc")};color:{r.get("fg","#000")};'>{r["opponent"]}</span></span>
-    <span class='result'>{r['result']} {r['score']}</span>
-  </div>
-</div>"""
-    slides_html += "</div>"
-    return f"<button class='schedule-nav schedule-prev'>◀</button><div class='schedule-carousel-viewport'>{slides_html}</div><button class='schedule-nav schedule-next'>▶</button>"
+# ==========================================
+# 2.5 ロジック関数群（HTMLテーブル・カルーセル）
+# ==========================================
 
 
 def build_pc_table(df):
@@ -241,6 +206,25 @@ def build_mobile_table(df):
             opp = f'<span class="venue {r["venue_class"]}">{sym}</span><span class="team-badge" style="background:{r.get("bg","#ccc")}; color:{r.get("fg","#000")};">{r["opponent"]}</span>'
             html += f'<tr class="{r["class"]}"><td>{r["week"]}</td><td>{r["date"]}<br><small>{r["time"] or "TBD"}</small></td><td>{opp}</td><td>{r["score"]}<br>{res}</td></tr>'
     return html + "</tbody></table></div>"
+
+
+def build_carousel_slides(df):
+    slides_html = '<div class="schedule-carousel">'
+    for _, r in df.iterrows():
+        if str(r["opponent"]).upper() == "BYE":
+            slides_html += f"<div class='schedule-slide bye' data-date=''><div class='line1'><span class='week'>{r['week']}</span></div><div class='line2'><span class='opponent'>BYE</span></div></div>"
+        else:
+            dt_obj = r["datetime"]
+            dt_display = dt_obj.strftime("%-m/%-d (%a) %H:%M JST") if not pd.isna(dt_obj) else "TBD"
+            sym = "vs" if r["venue_class"] == "home" else "@"
+            slides_html += f"<div class='schedule-slide {r['class']}' data-date='{r['試合日時（日本時間）']}'><div class='line1'><span class='week'>{r['week']}</span>　{dt_display}</div><div class='line2'><span class='opponent'><span class='venue {r['venue_class']}'>{sym}</span><span class='team-badge' style='background:{r.get('bg','#ccc')};color:{r.get('fg','#000')};'>{r['opponent']}</span></span><span class='result'>{r['result']} {r['score']}</span></div></div>"
+    slides_html += "</div>"
+    return f"<button class='schedule-nav schedule-prev'>◀</button><div class='schedule-carousel-viewport'>{slides_html}</div><button class='schedule-nav schedule-next'>▶</button>"
+
+
+# ==========================================
+# 3. 通信・メイン処理
+# ==========================================
 
 
 def fetch_from_notion():
@@ -294,13 +278,7 @@ def update_hatena(page_id, title, content):
     digest = base64.b64encode(hashlib.sha1(nonce + created.encode() + HATENA_API_KEY.encode()).digest()).decode()
     wsse = f'UsernameToken Username="{HATENA_USER}", PasswordDigest="{digest}", Nonce="{base64.b64encode(nonce).decode()}", Created="{created}"'
     xml = f'<?xml version="1.0" encoding="utf-8"?><entry xmlns="http://www.w3.org/2005/Atom"><title>{title}</title><content type="text/html">{escape(content)}</content></entry>'
-    res = requests.put(url, data=xml.encode("utf-8"), headers={"X-WSSE": wsse, "Content-Type": "application/xml"})
-    print(f"Update {title}: {res.status_code}")
-
-
-# ==========================================
-# 3. メイン処理
-# ==========================================
+    requests.put(url, data=xml.encode("utf-8"), headers={"X-WSSE": wsse, "Content-Type": "application/xml"})
 
 
 def main():
@@ -308,7 +286,6 @@ def main():
         df = fetch_from_notion()
         colors_df = pd.read_excel(color_path)
         df = df.sort_values("sort_no").reset_index(drop=True)
-
         raw_dates = df["試合日時（日本時間）"].fillna("").astype(str)
         df["datetime"] = pd.to_datetime(
             raw_dates.str.replace(r"\s*\(.*\)", "", regex=True).str.strip(), errors="coerce"
@@ -318,8 +295,7 @@ def main():
 
         dt_str_list = []
         for i, row in df.iterrows():
-            raw_val = str(row["試合日時（日本時間）"])
-            dt_obj = row["datetime"]
+            raw_val, dt_obj = str(row["試合日時（日本時間）"]), row["datetime"]
             if pd.isna(dt_obj) or not raw_val or raw_val == "None":
                 dt_str_list.append("TBD")
             elif "T" in raw_val or ":" in raw_val:
@@ -332,22 +308,19 @@ def main():
         df["venue_class"] = df["home"].map({"Home": "home", "Away": "away"}).fillna("")
         df["score"] = df["score"].fillna("-")
         df["class"] = df["result"].map({"W": "win", "L": "loss", "D": "draw"}).fillna("upcoming")
-
         future = df[(df["datetime"] > pd.Timestamp.today()) & (df["score"] == "-")]
         if not future.empty:
             df.loc[future["datetime"].idxmin(), "class"] = "next-game"
-
         bye_mask = df["opponent"].str.upper() == "BYE"
         df.loc[bye_mask, ["datetime_str", "score", "result"]] = ""
         df.loc[bye_mask, "class"] = "bye"
-
         colors_df = colors_df.rename(columns={"Team": "opponent", "Color 1": "bg", "Color 2": "fg"})
         df = pd.merge(df, colors_df, on="opponent", how="left")
         df["date"] = df["datetime"].dt.strftime("%Y/%m/%d")
         df["time"] = df["datetime"].dt.strftime("%H:%M")
 
-        # --- 1. スケジュールメインページの組み立て（専用バーを使用） ---
-        main_html = build_main_page_record_bar(df)  # ★ここが専用デザイン
+        # --- メインページHTML構築 ---
+        main_html = build_main_page_record_bar(df)
         pre_df = df[df["week"].astype(str).str.startswith("Pre")]
         reg_df = df[~df["week"].astype(str).str.startswith("Pre") & ~df["week"].isin(POSTSEASON_WEEKS)]
         post_df = df[df["week"].isin(POSTSEASON_WEEKS)]
@@ -366,47 +339,38 @@ def main():
         for tid, d in [("pre", pre_df), ("reg", reg_df), ("post", post_df)]:
             if tid == "post" and d.empty:
                 continue
+            # ここで build_pc_table と build_mobile_table を確実に呼び出し！
             main_html += f'<div class="tab-content" id="{tid}" style="display:none;">{build_pc_table(d)}{build_mobile_table(d)}</div>'
 
         main_html += """<script>
 document.addEventListener("DOMContentLoaded", function () {
     const now = new Date(); const month = now.getMonth() + 1;
-    let defaultTab = "reg";
-    const hasPost = document.getElementById("post") !== null;
-    const hasPre = document.getElementById("pre") !== null;
+    let defaultTab = "reg"; const hasPost = document.getElementById("post") !== null; const hasPre = document.getElementById("pre") !== null;
     if (month >= 5 && month <= 8 && hasPre) defaultTab = "pre";
     else if ((month === 1 || month === 2) && hasPost) defaultTab = "post";
-    else if (!document.getElementById(defaultTab)) {
-        if (hasPost) defaultTab = "post"; else if (hasPre) defaultTab = "pre";
-    }
+    else if (!document.getElementById(defaultTab)) { if (hasPost) defaultTab = "post"; else if (hasPre) defaultTab = "pre"; }
     document.querySelectorAll(".tab-content").forEach(tab => { tab.style.display = "none"; });
     document.querySelectorAll(".tab-btn").forEach(btn => {
-        btn.classList.remove("active");
-        if (btn.dataset.target === defaultTab) btn.classList.add("active");
+        btn.classList.remove("active"); if (btn.dataset.target === defaultTab) btn.classList.add("active");
     });
-    const def = document.getElementById(defaultTab);
-    if (def) def.style.display = "block";
+    const def = document.getElementById(defaultTab); if (def) def.style.display = "block";
     document.querySelectorAll(".tab-btn").forEach(button => {
         button.addEventListener("click", () => {
             const target = button.dataset.target;
             document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
             button.classList.add("active");
-            document.querySelectorAll(".tab-content").forEach(tab => {
-                tab.style.display = (tab.id === target) ? "block" : "none";
-            });
+            document.querySelectorAll(".tab-content").forEach(tab => { tab.style.display = (tab.id === target) ? "block" : "none"; });
         });
     });
 });</script>"""
 
-        # --- 2. 隠しデータ供給用HTML（ヘッダー用の開閉式デザイン） ---
+        # --- 隠しSnippetページ構築 ---
         snippet_html = f'<div id="score-data-source">{build_carousel_slides(df)}</div><div id="record-data-source">{build_header_record_bar(df)}</div>'
 
-        # 送信
         update_hatena(HATENA_SCHEDULE_PAGE_ID, "2025 Game Schedule", main_html)
         if HATENA_LATEST_SCHEDULE_PAGE_ID:
             update_hatena(HATENA_LATEST_SCHEDULE_PAGE_ID, "LATEST_DATA", snippet_html)
-
-        print("✨ スケジュールページとヘッダー用データの両方を、別々のデザインで更新完了！")
+        print("✨ 完璧に更新されたよ、しょう！")
     except Exception as e:
         print(f"エラー発生: {e}")
 
