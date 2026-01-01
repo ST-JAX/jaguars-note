@@ -23,6 +23,7 @@ HATENA_USER = get_env("HATENA_USER")
 HATENA_BLOG = get_env("HATENA_BLOG")
 HATENA_API_KEY = get_env("HATENA_API_KEY")
 HATENA_SCHEDULE_PAGE_ID = get_env("HATENA_SCHEDULE_PAGE_ID")
+# ヘッダーデータ供給用の隠しページID
 HATENA_LATEST_SCHEDULE_PAGE_ID = get_env("HATENA_LATEST_SCHEDULE_PAGE_ID")
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -66,7 +67,7 @@ JAX_CONF, JAX_DIV = "AFC", "South"
 POSTSEASON_WEEKS = ["WC", "DIV", "CONF", "SB"]
 
 # ==========================================
-# 2. ロジック関数群（戦績計算）
+# 2. ロジック関数群（以前のものを完全復元）
 # ==========================================
 
 
@@ -96,26 +97,22 @@ def _compute_streak_schedule(df):
     return f"{code}{count}"
 
 
-# --- スケジュールページ専用の戦績バー（固定デザイン） ---
 def build_main_page_record_bar(schedule_df):
     s = schedule_df["week"].astype(str)
     reg = schedule_df[~s.str.startswith("Pre") & ~schedule_df["week"].isin(POSTSEASON_WEEKS)].copy()
     played = reg[reg["win"].isin(["Win", "Lose", "Draw"])].copy()
     if played.empty:
         return '<div id="schedule-record-bar"><div class="jax-record-inner"><div class="jax-record-main"><span class="jax-record-team">JAX</span><span class="jax-record-overall">0-0</span></div></div></div>'
-
     overall = _count_record_schedule(played)
     conf_div_df = played["opponent"].map(lambda t: TEAM_INFO.get(str(t), (None, None))).apply(pd.Series)
     conf_div_df.columns = ["_opp_conf", "_opp_div"]
     played = played.join(conf_div_df)
-
     div_record = _count_record_schedule(played[(played["_opp_conf"] == JAX_CONF) & (played["_opp_div"] == JAX_DIV)])
     conf_record = _count_record_schedule(played[played["_opp_conf"] == JAX_CONF])
     nfc_record = _count_record_schedule(played[played["_opp_conf"] == "NFC"])
     home_record = _count_record_schedule(played[played["home"] == "Home"])
     away_record = _count_record_schedule(played[played["home"] == "Away"])
     streak = _compute_streak_schedule(played)
-
     div_pill = (
         f"<span class='jax-record-pill jax-record-pill-division'><span class='jax-record-label'>Division</span> <span class='jax-record-num'>{div_record}</span></span>"
         if div_record
@@ -142,11 +139,9 @@ def build_main_page_record_bar(schedule_df):
         pills.append(
             f"<span class='jax-record-pill jax-record-streak'><span class='jax-record-label'>Streak</span> <span class='jax-record-num'>{streak}</span></span>"
         )
-
     return f"""<div id="schedule-record-bar"><div class="jax-record-inner"><div class="jax-record-main"><span class="jax-record-team">JAX</span> <span class="jax-record-overall">{overall}</span> {div_pill}</div><div class="jax-record-splits">{' '.join(pills)}</div></div></div>"""
 
 
-# --- ヘッダー専用の戦績バー（開閉式デザイン） ---
 def build_header_record_bar(schedule_df):
     s = schedule_df["week"].astype(str)
     reg = schedule_df[~s.str.startswith("Pre") & ~schedule_df["week"].isin(POSTSEASON_WEEKS)].copy()
@@ -174,13 +169,7 @@ def build_header_record_bar(schedule_df):
     pills.append(
         f"<span class='jax-record-pill jax-record-streak'><span class='jax-record-label'>Streak</span> <span class='jax-record-num'>{streak}</span></span>"
     )
-
     return f"""<div id="jax-record-bar" class="jax-record-collapsible"><div class="jax-record-inner"><button class="jax-record-main" type="button" aria-expanded="false"><span class="jax-record-team">JAX</span><span class="jax-record-overall">{overall}</span>{div_pill}<span class="jax-record-chevron">▼</span></button><div class="jax-record-details"><div class="jax-record-splits">{''.join(pills)}</div></div></div></div>"""
-
-
-# ==========================================
-# 2.5 ロジック関数群（HTMLテーブル・カルーセル）
-# ==========================================
 
 
 def build_pc_table(df):
@@ -214,16 +203,15 @@ def build_carousel_slides(df):
         if str(r["opponent"]).upper() == "BYE":
             slides_html += f"<div class='schedule-slide bye' data-date=''><div class='line1'><span class='week'>{r['week']}</span></div><div class='line2'><span class='opponent'>BYE</span></div></div>"
         else:
-            dt_obj = r["datetime"]
+            dt_obj, sym = r["datetime"], "vs" if r["venue_class"] == "home" else "@"
             dt_display = dt_obj.strftime("%-m/%-d (%a) %H:%M JST") if not pd.isna(dt_obj) else "TBD"
-            sym = "vs" if r["venue_class"] == "home" else "@"
             slides_html += f"<div class='schedule-slide {r['class']}' data-date='{r['試合日時（日本時間）']}'><div class='line1'><span class='week'>{r['week']}</span>　{dt_display}</div><div class='line2'><span class='opponent'><span class='venue {r['venue_class']}'>{sym}</span><span class='team-badge' style='background:{r.get('bg','#ccc')};color:{r.get('fg','#000')};'>{r['opponent']}</span></span><span class='result'>{r['result']} {r['score']}</span></div></div>"
     slides_html += "</div>"
     return f"<button class='schedule-nav schedule-prev'>◀</button><div class='schedule-carousel-viewport'>{slides_html}</div><button class='schedule-nav schedule-next'>▶</button>"
 
 
 # ==========================================
-# 3. 通信・メイン処理
+# 3. メイン処理（API取得と更新）
 # ==========================================
 
 
@@ -292,7 +280,6 @@ def main():
         )
         if df["datetime"].dt.tz is not None:
             df["datetime"] = df["datetime"].dt.tz_localize(None)
-
         dt_str_list = []
         for i, row in df.iterrows():
             raw_val, dt_obj = str(row["試合日時（日本時間）"]), row["datetime"]
@@ -303,7 +290,6 @@ def main():
             else:
                 dt_str_list.append(dt_obj.strftime("%Y/%m/%d") + " TBD")
         df["datetime_str"] = dt_str_list
-
         df["result"] = df["win"].map({"Win": "W", "Lose": "L", "Draw": "D"}).fillna("-")
         df["venue_class"] = df["home"].map({"Home": "home", "Away": "away"}).fillna("")
         df["score"] = df["score"].fillna("-")
@@ -319,7 +305,7 @@ def main():
         df["date"] = df["datetime"].dt.strftime("%Y/%m/%d")
         df["time"] = df["datetime"].dt.strftime("%H:%M")
 
-        # --- メインページHTML構築 ---
+        # --- メインページHTML構築（ここでしょうさんが使っていた通りの順序に戻しました） ---
         main_html = build_main_page_record_bar(df)
         pre_df = df[df["week"].astype(str).str.startswith("Pre")]
         reg_df = df[~df["week"].astype(str).str.startswith("Pre") & ~df["week"].isin(POSTSEASON_WEEKS)]
@@ -331,46 +317,60 @@ def main():
             ("Regular Season", "RS", "reg", reg_df),
             ("Postseason", "POST", "post", post_df),
         ]
-        for pc_lbl, sp_lbl, tid, d in tabs:
+        for pc, sp, tid, d in tabs:
             if tid == "post" and d.empty:
                 continue
-            main_html += f'<button class="tab-btn" data-sp="{sp_lbl}" data-target="{tid}">{pc_lbl}</button>'
+            main_html += f'<button class="tab-btn" data-sp="{sp}" data-target="{tid}">{pc}</button>'
         main_html += "</div>"
         for tid, d in [("pre", pre_df), ("reg", reg_df), ("post", post_df)]:
             if tid == "post" and d.empty:
                 continue
-            # ここで build_pc_table と build_mobile_table を確実に呼び出し！
-            main_html += f'<div class="tab-content" id="{tid}" style="display:none;">{build_pc_table(d)}{build_mobile_table(d)}</div>'
+            # 表を表示（初期状態は display: none）
+            main_html += f'<div class="tab-content" id="{tid}" style="display: none;">{build_pc_table(d)}{build_mobile_table(d)}</div>'
 
-        main_html += """<script>
+        # JavaScript（ここでJS内の波括弧がPythonと喧嘩しないよう """ を使ってそのまま書き出します）
+        main_html += """
+<script>
 document.addEventListener("DOMContentLoaded", function () {
     const now = new Date(); const month = now.getMonth() + 1;
-    let defaultTab = "reg"; const hasPost = document.getElementById("post") !== null; const hasPre = document.getElementById("pre") !== null;
-    if (month >= 5 && month <= 8 && hasPre) defaultTab = "pre";
-    else if ((month === 1 || month === 2) && hasPost) defaultTab = "post";
-    else if (!document.getElementById(defaultTab)) { if (hasPost) defaultTab = "post"; else if (hasPre) defaultTab = "pre"; }
+    let defaultTab = "reg"; 
+    const hasPost = document.getElementById("post") !== null; 
+    const hasPre = document.getElementById("pre") !== null;
+    
+    if (month >= 5 && month <= 8 && hasPre) { defaultTab = "pre"; } 
+    else if ((month === 1 || month === 2) && hasPost) { defaultTab = "post"; }
+    
+    // 全て非表示にした後、デフォルトだけ表示
     document.querySelectorAll(".tab-content").forEach(tab => { tab.style.display = "none"; });
     document.querySelectorAll(".tab-btn").forEach(btn => {
-        btn.classList.remove("active"); if (btn.dataset.target === defaultTab) btn.classList.add("active");
+        btn.classList.remove("active");
+        if (btn.dataset.target === defaultTab) btn.classList.add("active");
     });
-    const def = document.getElementById(defaultTab); if (def) def.style.display = "block";
+    
+    const def = document.getElementById(defaultTab);
+    if (def) { def.style.display = "block"; }
+
+    // クリックイベント
     document.querySelectorAll(".tab-btn").forEach(button => {
         button.addEventListener("click", () => {
             const target = button.dataset.target;
             document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
             button.classList.add("active");
-            document.querySelectorAll(".tab-content").forEach(tab => { tab.style.display = (tab.id === target) ? "block" : "none"; });
+            document.querySelectorAll(".tab-content").forEach(tab => {
+                tab.style.display = (tab.id === target) ? "block" : "none";
+            });
         });
     });
-});</script>"""
+});
+</script>"""
 
-        # --- 隠しSnippetページ構築 ---
+        # 隠しページ（Snippet）
         snippet_html = f'<div id="score-data-source">{build_carousel_slides(df)}</div><div id="record-data-source">{build_header_record_bar(df)}</div>'
 
         update_hatena(HATENA_SCHEDULE_PAGE_ID, "2025 Game Schedule", main_html)
         if HATENA_LATEST_SCHEDULE_PAGE_ID:
             update_hatena(HATENA_LATEST_SCHEDULE_PAGE_ID, "LATEST_DATA", snippet_html)
-        print("✨ 完璧に更新されたよ、しょう！")
+        print("🏈 更新完了！表もJSも元通りです。")
     except Exception as e:
         print(f"エラー発生: {e}")
 
