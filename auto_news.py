@@ -164,6 +164,7 @@ def update_hatena_page(html_content):
     # AtomPub形式のXML
     xml_data = f"""<?xml version="1.0" encoding="utf-8"?>
 <entry xmlns="http://www.w3.org/2005/Atom">
+  <title>NEWS {TARGET_SEASON}</title>
   <content type="text/html">
     {escape(html_content)}
   </content>
