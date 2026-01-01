@@ -30,8 +30,11 @@ jobs:
         env:
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           NOTION_SCHEDULE_DB_ID: ${{ secrets.NOTION_SCHEDULE_DB_ID }}
+          NOTION_NEWS_DB_ID: ${{ secrets.NOTION_NEWS_DB_ID }}
           HATENA_USER: ${{ secrets.HATENA_USER }}
           HATENA_BLOG: ${{ secrets.HATENA_BLOG }}
           HATENA_API_KEY: ${{ secrets.HATENA_API_KEY }}
           HATENA_SCHEDULE_PAGE_ID: ${{ secrets.HATENA_SCHEDULE_PAGE_ID }}
+          HATENA_NEWS_PAGE_ID: ${{ secrets.HATENA_NEWS_PAGE_ID }}
         run: python auto_schedule.py
+             python auto_news.py
