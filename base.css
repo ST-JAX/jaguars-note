@@ -2708,7 +2708,6 @@ padding-left: 3px;
 
 /* #region スマホ用 */
 .schedule-mobile {
-  width: fit-content;
   margin: 0 auto;
   padding-bottom: 1em;
 }
@@ -2875,11 +2874,15 @@ padding-left: 3px;
   margin-bottom: 1em;
 }
 
+.tab-btn::before {
+	content: attr(deta-pc);
+
 .tab-btn {
   background: #101820;
   color: #fff;
-  padding: 8px 16px;
+  padding: 10px;
   border: none;
+  border-radius: 999px;
   font-family: 'Anton', sans-serif;
   cursor: pointer;
   border-bottom: 2px solid transparent;
@@ -2901,6 +2904,23 @@ padding-left: 3px;
   display: block;
   opacity: 1;
 }
+
+@media screen and (max-width: 480px) {
+    /* ボタンの文字をスマホ用に切り替え */
+    .tab-btn::before {
+        content: attr(data-sp);
+    }
+    
+    /* ボタンを3（または2）等分で画面いっぱいに */
+    .tab-buttons {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+        gap: 5px;
+        width: 100%;
+        padding: 0;
+    }
+}	
+	
 /* #endregion */
 /* #endregion */
 
