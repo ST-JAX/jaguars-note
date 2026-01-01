@@ -9,17 +9,23 @@ from xml.sax.saxutils import escape
 # ==========================================
 # 1. 設定情報（GitHub Secretsから取得）
 # ==========================================
-NOTION_TOKEN = os.getenv("NOTION_TOKEN")
-NOTION_NEWS_DB_ID = os.getenv("NOTION_NEWS_DB_ID")
-HATENA_USER = os.getenv("HATENA_USER")
-HATENA_BLOG = os.getenv("HATENA_BLOG")
-HATENA_API_KEY = os.getenv("HATENA_API_KEY")
-HATENA_NEWS_PAGE_ID = os.getenv("HATENA_NEWS_PAGE_ID")
+def get_env(key):
+    val = os.getenv(key)
+    return val.strip() if val else None
 
-# 現在の表示対象シーズン
-TARGET_SEASON = "2025"
+NOTION_TOKEN = get_env("NOTION_TOKEN")
+NOTION_NEWS_DB_ID = get_env("NOTION_NEWS_DB_ID")
+HATENA_USER = get_env("HATENA_USER")
+HATENA_BLOG = get_env("HATENA_BLOG")
+HATENA_API_KEY = get_env("HATENA_API_KEY")
+# アーカイブ用（2025一覧）とバー専用（最新10件）の2つのID
+HATENA_NEWS_PAGE_ID = get_env("HATENA_NEWS_PAGE_ID")
+HATENA_LATEST_NEWS_PAGE_ID = get_env("HATENA_LATEST_NEWS_PAGE_ID")
 
-# Type名とCSSクラスの変換マップ
+# アーカイブ対象のシーズン
+TARGET_SEASON = 2025
+
+# NotionのType名とCSSクラスの変換マップ
 TYPE_MAP = {
     "Contract": "contract",
     "Draft": "draft",
@@ -27,73 +33,80 @@ TYPE_MAP = {
     "Injury": "injury",
     "News": "news",
     "Roster Move": "roster-move",
-    "Trade": "trade",
+    "Trade": "trade"
 }
 
-
-def fetch_news_from_notion():
-    """Notionから指定シーズンのニュースを取得"""
+def fetch_news_from_notion(season_filter=None, page_size=100):
+    """Notionからニュースを取得。season_filterがあればその年のみ、なければ全期間"""
     url = f"https://api.notion.com/v1/databases/{NOTION_NEWS_DB_ID}/query"
     headers = {
         "Authorization": f"Bearer {NOTION_TOKEN}",
         "Notion-Version": "2022-06-28",
-        "Content-Type": "application/json",
+        "Content-Type": "application/json"
     }
-
-    # フィルタ：SeasonプロパティがTARGET_SEASONと一致するもの
-    # ソート：日付の新しい順
+    
+    # 基本のクエリ（日付順）
     payload = {
-        "filter": {"property": "Season", "number": {"equals": int(TARGET_SEASON)}},
         "sorts": [{"property": "Date", "direction": "descending"}],
+        "page_size": page_size
     }
-
+    
+    # シーズン指定（数値型）がある場合はフィルターを追加
+    if season_filter:
+        payload["filter"] = {
+            "property": "Season",
+            "number": {"equals": int(season_filter)}
+        }
+    
     res = requests.post(url, headers=headers, json=payload)
-
-    res.raise_for_status()
+    if res.status_code != 200:
+        print(f"Notion Error: {res.text}")
+        res.raise_for_status()
+        
     data = res.json()
-
     news_list = []
     for page in data["results"]:
         props = page["properties"]
-
-        # 各プロパティの安全な取得
+        
+        # タイトル取得
         title_list = props.get("Title", {}).get("title", [])
         title = title_list[0]["text"]["content"] if title_list else "No Title"
-
+        
+        # 日付取得
         date_obj = props.get("Date", {}).get("date")
-        date = date_obj["start"] if date_obj else "2025/01/01"
-
+        date = date_obj["start"] if date_obj else "2025-01-01"
+        
+        # タイプ取得
         type_obj = props.get("Type", {}).get("select")
         ntype = type_obj["name"] if type_obj else "News"
-
+        
+        # URL取得
         url_obj = props.get("URL")
         url_val = url_obj.get("url") if url_obj else None
-
-        news_list.append({"date": date.replace("-", "/"), "title": title, "type": ntype, "url": url_val})
+        
+        news_list.append({
+            "date": date.replace("-", "/"),
+            "title": title,
+            "type": ntype,
+            "url": url_val
+        })
     return news_list
 
-
-def generate_news_html(news_data):
-    """ニュース一覧のHTML全体を生成"""
+def generate_full_page_html(news_data):
+    """アーカイブページ（フィルタ機能付き）のHTMLを生成"""
     items_html = ""
     for item in news_data:
         css_type = TYPE_MAP.get(item["type"], "news")
-
-        if item["url"]:
-            title_part = f'<a href="{item["url"]}" class="news-item-title">{escape(item["title"])}</a>'
-        else:
-            title_part = f'<span class="news-item-title">{escape(item["title"])}</span>'
-
-        # ここは変数を埋め込むので { } は1重でOK
-        items_html += f"""
+        title_part = f'<a href="{item["url"]}" class="news-item-title">{escape(item["title"])}</a>' if item["url"] else f'<span class="news-item-title">{escape(item["title"])}</span>'
+        
+        items_html += f'''
 <li class="news-item" data-type="{css_type}">
     <span class="news-item-date">{item["date"]}</span>
     <span class="news-item-type-col"><span class="news-item-type news-item-type--{css_type}">{item["type"]}</span></span>
     {title_part}
-</li>"""
+</li>'''
 
-    # 【重要】JSを含む全体構造。JSの波括弧は {{ }} にしているよ！
-    full_html = f"""
+    return f'''
 <div class="news-list-wrapper">
     <header class="news-list-header">
         <h2 class="news-list-title">NEWS {TARGET_SEASON}</h2>
@@ -118,77 +131,82 @@ def generate_news_html(news_data):
 document.addEventListener("DOMContentLoaded", function () {{
     const list = document.querySelector(".js-news-list");
     if (!list) return;
-
     const items = Array.from(list.querySelectorAll(".news-item"));
     const buttons = Array.from(document.querySelectorAll(".news-filter-btn"));
 
     buttons.forEach((btn) => {{
         btn.addEventListener("click", () => {{
             const filter = btn.dataset.filter;
-
-            // ボタンの活性化切り替え
             buttons.forEach((b) => b.classList.remove("is-active"));
             btn.classList.add("is-active");
 
-            // フィルタリング実行
             items.forEach((item) => {{
                 const t = item.dataset.type;
-                // 表示・非表示の切り替え
                 if (filter === "all" || filter === t) {{
-                    item.style.display = ""; // 表示
+                    item.style.display = "";
                 }} else {{
-                    item.style.display = "none"; // 非表示
+                    item.style.display = "none";
                 }}
             }});
         }});
     }});
 }});
 </script>
-"""
-    return full_html
+'''
 
+def generate_bar_snippet_html(news_data):
+    """ニュースバーが読み込むための、純粋なリストのみのHTMLを生成"""
+    items_html = ""
+    for item in news_data:
+        css_type = TYPE_MAP.get(item["type"], "news")
+        title_part = f'<a href="{item["url"]}" class="news-item-title">{escape(item["title"])}</a>' if item["url"] else f'<span class="news-item-title">{escape(item["title"])}</span>'
+        
+        items_html += f'''
+<li class="news-item" data-type="{css_type}">
+    <span class="news-item-date">{item["date"]}</span>
+    <span class="news-item-type-col"><span class="news-item-type news-item-type--{css_type}">{item["type"]}</span></span>
+    {title_part}
+</li>'''
+    return f'<ul class="news-list js-news-list">{items_html}</ul>'
 
-def update_hatena_page(html_content):
-    """はてなブログの固定ページを更新"""
-    url = f"https://blog.hatena.ne.jp/{HATENA_USER}/{HATENA_BLOG}/atom/page/{HATENA_NEWS_PAGE_ID}"
-
-    # WSSE認証の作成
-    user_name = HATENA_USER
-    api_key = HATENA_API_KEY
+def update_hatena_page(page_id, title, html_content):
+    """はてなブログの指定IDのページを更新"""
+    url = f"https://blog.hatena.ne.jp/{HATENA_USER}/{HATENA_BLOG}/atom/page/{page_id}"
+    
     created = datetime.datetime.now().isoformat() + "Z"
     nonce = hashlib.sha1(str(random.random()).encode()).digest()
-    digest = hashlib.sha1(nonce + created.encode() + api_key.encode()).digest()
-
-    wsse = f'UsernameToken Username="{user_name}", PasswordDigest="{base64.b64encode(digest).decode()}", Nonce="{base64.b64encode(nonce).decode()}", Created="{created}"'
-
-    # AtomPub形式のXML
-    xml_data = f"""<?xml version="1.0" encoding="utf-8"?>
+    digest = hashlib.sha1(nonce + created.encode() + HATENA_API_KEY.encode()).digest()
+    wsse = f'UsernameToken Username="{HATENA_USER}", PasswordDigest="{base64.b64encode(digest).decode()}", Nonce="{base64.b64encode(nonce).decode()}", Created="{created}"'
+    
+    xml_data = f'''<?xml version="1.0" encoding="utf-8"?>
 <entry xmlns="http://www.w3.org/2005/Atom">
-  <title>NEWS {TARGET_SEASON}</title>
+  <title>{title}</title>
   <content type="text/html">
     {escape(html_content)}
   </content>
-</entry>"""
+</entry>'''
 
     headers = {"X-WSSE": wsse, "Content-Type": "application/xml"}
-    res = requests.put(url, data=xml_data.encode("utf-8"), headers=headers)
-
+    res = requests.put(url, data=xml_data.encode('utf-8'), headers=headers)
+    
     if res.status_code == 200:
-        print(f"Successfully updated News page!")
+        print(f"Successfully updated: {title}")
     else:
-        print(f"Failed to update. Status: {res.status_code}")
+        print(f"Failed to update {title}. Status: {res.status_code}")
         print(res.text)
 
-
 def main():
-    print("Fetching News from Notion...")
-    news_data = fetch_news_from_notion()
-
-    print(f"Generating HTML for {len(news_data)} items...")
-    full_html = generate_news_html(news_data)
-
-    print("Updating Hatena Blog...")
-    update_hatena_page(full_html)
+    # 1. アーカイブ用データ取得 (2025年全件)
+    print(f"Fetching {TARGET_SEASON} News for Archive...")
+    archive_news = fetch_news_from_notion(season_filter=TARGET_SEASON, page_size=100)
+    archive_html = generate_full_page_html(archive_news)
+    update_hatena_page(HATENA_NEWS_PAGE_ID, f"NEWS {TARGET_SEASON}", archive_html)
+    
+    # 2. ニュースバー用データ取得 (全期間から最新10件)
+    print("Fetching Global Latest News for Bar...")
+    latest_news = fetch_news_from_notion(season_filter=None, page_size=10)
+    bar_html = generate_bar_snippet_html(latest_news)
+    update_hatena_page(HATENA_LATEST_NEWS_PAGE_ID, "LATEST_NEWS_BAR_DATA", bar_html)
 
 if __name__ == "__main__":
     main()
