@@ -36,5 +36,6 @@ jobs:
           HATENA_API_KEY: ${{ secrets.HATENA_API_KEY }}
           HATENA_SCHEDULE_PAGE_ID: ${{ secrets.HATENA_SCHEDULE_PAGE_ID }}
           HATENA_NEWS_PAGE_ID: ${{ secrets.HATENA_NEWS_PAGE_ID }}
-        run: python auto_schedule.py
-             python auto_news.py
+        run: |
+          python auto_schedule.py
+          python auto_news.py
