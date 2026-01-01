@@ -1,0 +1,37 @@
+name: Update Jaguars Schedule
+
+on:
+  schedule:
+    # 毎日 6時間おきに自動実行する設定（UTC時間なので注意）
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+    # GitHubの画面から手動で「今すぐ更新」ボタンを押せるようにする設定
+
+jobs:
+  update-blog:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pandas requests openpyxl
+
+      - name: Run update script
+        # ここで金庫(Secrets)の中身をPythonに渡すよ
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_SCHEDULE_DB_ID: ${{ secrets.NOTION_SCHEDULE_DB_ID }}
+          HATENA_USER: ${{ secrets.HATENA_USER }}
+          HATENA_BLOG: ${{ secrets.HATENA_BLOG }}
+          HATENA_API_KEY: ${{ secrets.HATENA_API_KEY }}
+          HATENA_SCHEDULE_PAGE_ID: ${{ secrets.HATENA_SCHEDULE_PAGE_ID }}
+        run: python auto_schedule.py
