@@ -2875,7 +2875,8 @@ padding-left: 3px;
 }
 
 .tab-btn::before {
-	content: attr(deta-pc);
+	content: attr(data-pc);
+}
 
 .tab-btn {
   background: #101820;
