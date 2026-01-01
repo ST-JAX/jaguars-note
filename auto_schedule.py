@@ -10,7 +10,7 @@ from xml.sax.saxutils import escape
 
 
 # ==========================================
-# 1. 設定情報（GitHub Secretsから取得）
+# 1. 設定情報
 # ==========================================
 def get_env(key):
     val = os.getenv(key)
@@ -23,7 +23,7 @@ HATENA_USER = get_env("HATENA_USER")
 HATENA_BLOG = get_env("HATENA_BLOG")
 HATENA_API_KEY = get_env("HATENA_API_KEY")
 HATENA_SCHEDULE_PAGE_ID = get_env("HATENA_SCHEDULE_PAGE_ID")
-# 【NEW】スコアバー・戦績バーのデータ供給用ページID
+# ヘッダーデータ供給用の隠しページID
 HATENA_LATEST_SCHEDULE_PAGE_ID = get_env("HATENA_LATEST_SCHEDULE_PAGE_ID")
 
 # パス設定
@@ -69,7 +69,7 @@ JAX_CONF, JAX_DIV = "AFC", "South"
 POSTSEASON_WEEKS = ["WC", "DIV", "CONF", "SB"]
 
 # ==========================================
-# 2. ロジック関数群（既存ロジック）
+# 2. ロジック関数群
 # ==========================================
 
 
@@ -100,13 +100,12 @@ def _compute_streak_schedule(df):
 
 
 def build_schedule_record_bar(schedule_df):
-    """戦績バー（12-4など）のHTML生成"""
     s = schedule_df["week"].astype(str)
     reg = schedule_df[~s.str.startswith("Pre") & ~schedule_df["week"].isin(POSTSEASON_WEEKS)].copy()
     played = reg[reg["win"].isin(["Win", "Lose", "Draw"])].copy()
 
     if played.empty:
-        return '<div class="jax-record-inner"><button class="jax-record-main"><span class="jax-record-team">JAX</span><span class="jax-record-overall">0-0</span></button></div>'
+        return '<div id="jax-record-bar" class="jax-record-collapsible"><div class="jax-record-inner"><button class="jax-record-main"><span class="jax-record-team">JAX</span><span class="jax-record-overall">0-0</span></button></div></div>'
 
     overall = _count_record_schedule(played)
     conf_div_df = played["opponent"].map(lambda t: TEAM_INFO.get(str(t), (None, None))).apply(pd.Series)
@@ -150,6 +149,7 @@ def build_schedule_record_bar(schedule_df):
         )
 
     return f"""
+<div id="jax-record-bar" class="jax-record-collapsible">
 <div class="jax-record-inner">
   <button class="jax-record-main" type="button" aria-expanded="false">
     <span class="jax-record-team">JAX</span><span class="jax-record-overall">{overall}</span>{div_pill}<span class="jax-record-chevron">▼</span>
@@ -157,27 +157,28 @@ def build_schedule_record_bar(schedule_df):
   <div class="jax-record-details">
     <div class="jax-record-splits">{''.join(pills)}</div>
   </div>
+</div>
 </div>"""
 
 
 def build_carousel_slides(df):
-    """【NEW】スコアバー用のカルーセルHTML生成"""
     slides_html = '<div class="schedule-carousel">'
     for _, r in df.iterrows():
         if str(r["opponent"]).upper() == "BYE":
-            slides_html += f"<div class='schedule-slide bye'><div class='line1'><span class='week'>{r['week']}</span></div><div class='line2'><span class='opponent'>BYE</span></div></div>"
+            slides_html += f"<div class='schedule-slide bye' data-date=''><div class='line1'><span class='week'>{r['week']}</span></div><div class='line2'><span class='opponent'>BYE</span></div></div>"
         else:
             dt_obj = r["datetime"]
             dt_display = dt_obj.strftime("%-m/%-d (%a) %H:%M JST") if not pd.isna(dt_obj) else "TBD"
             sym = "vs" if r["venue_class"] == "home" else "@"
-            res_score = f"{r['result']} {r['score']}" if r["result"] != "-" else "-"
+            res_val = r["result"] if r["result"] != "-" else ""
+            score_val = r["score"] if r["score"] != "-" else "-"
 
             slides_html += f"""
 <div class='schedule-slide {r['class']}' data-date='{r['試合日時（日本時間）']}'>
   <div class='line1'><span class='week'>{r['week']}</span>　{dt_display}</div>
   <div class='line2'>
     <span class='opponent'><span class='venue {r['venue_class']}'>{sym}</span><span class='team-badge' style='background:{r.get("bg","#ccc")};color:{r.get("fg","#000")};'>{r["opponent"]}</span></span>
-    <span class='result'>{res_score}</span>
+    <span class='result'>{res_val} {score_val}</span>
   </div>
 </div>"""
     slides_html += "</div>"
@@ -245,7 +246,7 @@ def fetch_from_notion():
     return pd.DataFrame(rows)
 
 
-def update_hatena(page_id, title, content):
+def update_hatena_page(page_id, title, content):
     url = f"https://blog.hatena.ne.jp/{HATENA_USER}/{HATENA_BLOG}/atom/page/{page_id}"
     created = datetime.datetime.now().isoformat() + "Z"
     nonce = hashlib.sha1(str(random.random()).encode()).digest()
@@ -268,7 +269,6 @@ def main():
         colors_df = pd.read_excel(color_path)
         df = df.sort_values("sort_no").reset_index(drop=True)
 
-        # 日時整形
         raw_dates = df["試合日時（日本時間）"].fillna("").astype(str)
         df["datetime"] = pd.to_datetime(
             raw_dates.str.replace(r"\s*\(.*\)", "", regex=True).str.strip(), errors="coerce"
@@ -288,7 +288,6 @@ def main():
                 dt_str_list.append(dt_obj.strftime("%Y/%m/%d") + " TBD")
         df["datetime_str"] = dt_str_list
 
-        # その他整形
         df["result"] = df["win"].map({"Win": "W", "Lose": "L", "Draw": "D"}).fillna("-")
         df["venue_class"] = df["home"].map({"Home": "home", "Away": "away"}).fillna("")
         df["score"] = df["score"].fillna("-")
@@ -307,7 +306,6 @@ def main():
         df["date"] = df["datetime"].dt.strftime("%Y/%m/%d")
         df["time"] = df["datetime"].dt.strftime("%H:%M")
 
-        # HTML組み立て（メインページ用）
         main_html = build_schedule_record_bar(df)
         pre_df = df[df["week"].astype(str).str.startswith("Pre")]
         reg_df = df[~df["week"].astype(str).str.startswith("Pre") & ~df["week"].isin(POSTSEASON_WEEKS)]
@@ -328,25 +326,68 @@ def main():
             if tid == "post" and d.empty:
                 continue
             main_html += f'<div class="tab-content" id="{tid}" style="display:none;">{build_pc_table(d)}{build_mobile_table(d)}</div>'
-        main_html += "<script>/* (既存のタブ切替JS) */</script>"
 
-        # 【NEW】隠しページ（Snippet）用HTMLの組み立て
-        carousel_html = build_carousel_slides(df)
-        record_html = build_schedule_record_bar(df)  # 戦績バーHTMLを再利用
-        snippet_html = (
-            f'<div id="score-data-source">{carousel_html}</div><div id="record-data-source">{record_html}</div>'
-        )
+        # ここに省略されていたタブ切り替えJSを完全復活
+        main_html += """
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const now = new Date();
+    const month = now.getMonth() + 1;
+    let defaultTab = "reg";
+    const hasPost = document.getElementById("post") !== null;
+    const hasPre = document.getElementById("pre") !== null;
 
-        # はてなブログ更新
-        print("🚀 スケジュールメインページを更新中...")
-        update_hatena(HATENA_SCHEDULE_PAGE_ID, "2025 Game Schedule", main_html)
+    if (month >= 5 && month <= 8 && hasPre) {
+        defaultTab = "pre";
+    } else if ((month === 1 || month === 2) && hasPost) {
+        defaultTab = "post";
+    } else if (!document.getElementById(defaultTab)) {
+        if (hasPost) defaultTab = "post";
+        else if (hasPre) defaultTab = "pre";
+    }
 
+    document.querySelectorAll(".tab-content").forEach(tab => {
+        tab.classList.remove("active");
+        tab.style.display = "none";
+    });
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+        btn.classList.remove("active");
+        if (btn.dataset.target === defaultTab) { btn.classList.add("active"); }
+    });
+    const defaultContent = document.getElementById(defaultTab);
+    if (defaultContent) {
+        defaultContent.style.display = "block";
+        defaultContent.classList.add("active");
+    }
+
+    document.querySelectorAll(".tab-btn").forEach(button => {
+        button.addEventListener("click", () => {
+            const target = button.dataset.target;
+            document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
+            button.classList.add("active");
+            document.querySelectorAll(".tab-content").forEach(tab => {
+                if (tab.id === target) {
+                    tab.style.display = "block";
+                    tab.classList.add("active");
+                } else {
+                    tab.classList.remove("active");
+                    tab.style.display = "none";
+                }
+            });
+        });
+    });
+});
+</script>"""
+
+        # 【隠しデータ】の構築
+        snippet_html = f'<div id="score-data-source">{build_carousel_slides(df)}</div><div id="record-data-source">{build_schedule_record_bar(df)}</div>'
+
+        # 送信
+        update_hatena_page(HATENA_SCHEDULE_PAGE_ID, "2025 Game Schedule", main_html)
         if HATENA_LATEST_SCHEDULE_PAGE_ID:
-            print("🚀 ヘッダー用データを更新中...")
-            update_hatena(HATENA_LATEST_SCHEDULE_PAGE_ID, "LATEST_SCHEDULE_DATA", snippet_html)
+            update_hatena_page(HATENA_LATEST_SCHEDULE_PAGE_ID, "LATEST_SCHEDULE_DATA", snippet_html)
 
-        print("✨ すべての更新に成功したよ、しょう！")
-
+        print("✨ 成功したよ、しょう！")
     except Exception as e:
         print(f"エラー発生: {e}")
 
