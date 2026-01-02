@@ -186,7 +186,7 @@ def build_mobile_table(df):
 
 
 def build_header_snippet_data(df):
-    # --- スコアスライド作成 ---
+    # --- 1. スコアカルーセル部分の構築 ---
     slides_html = ""
     for _, r in df.iterrows():
         if str(r["opponent"]).upper() == "BYE":
@@ -194,17 +194,22 @@ def build_header_snippet_data(df):
         else:
             sym = "vs" if r["venue_class"] == "home" else "@"
             dt_obj = r["datetime"]
-            # data-dateをシンプルなISO形式（T00:00:00）に修正
             clean_date = dt_obj.strftime("%Y-%m-%dT%H:%M:%S") if not pd.isna(dt_obj) else ""
+            # 日付フォーマットを 8/10 (Sun) 形式に (ゼロ埋めなしは %-m, %-d)
             dt_display = dt_obj.strftime("%-m/%-d (%a) %H:%M JST") if not pd.isna(dt_obj) else "TBD"
-            # 結果表示のロジック修正 (- - にならないように)
-            res_val = f"{r['result']} {r['score']}" if r["result"] in ["W", "L", "D"] else "-"
 
-            slides_html += f"""<div class='schedule-slide {r['class']}' data-date='{clean_date}'><div class='line1'><span class='week'>{r['week']}</span>　{dt_display}</div><div class='line2'><span class='opponent'><span class='venue {r['venue_class']}'>{sym}</span><span class='team-badge' style='background:{r.get('bg','#ccc')};color:{r.get('fg','#000')};'>{r['opponent']}</span></span><span class='result'>{res_val}</span></div></div>"""
+            # 結果表示のロジック: Win/Lose/Drawがある場合のみスコアを出す
+            if r["result"] in ["W", "L", "D"]:
+                res_val = f"{r['result']} {r['score']}"
+            else:
+                res_val = "-"
 
-    score_html = f"<button class='schedule-nav schedule-prev'>◀</button><div class='schedule-carousel-viewport'><div class='schedule-carousel'>{slides_html}</div></div><button class='schedule-nav schedule-next'>▶</button>"
+            slides_html += f"<div class='schedule-slide {r['class']}' data-date='{clean_date}'><div class='line1'><span class='week'>{r['week']}</span>　{dt_display}</div><div class='line2'><span class='opponent'><span class='venue {r['venue_class']}'>{sym}</span><span class='team-badge' style='background:{r.get('bg','#ccc')};color:{r.get('fg','#000')};'>{r['opponent']}</span></span><span class='result'>{res_val}</span></div></div>"
 
-    # --- 戦績バー（開閉式・詳細項目付き）作成 ---
+    # カルーセルのラッパー構造を理想のコードと統一
+    score_bar_html = f"""<div id='score-wrapper'><div id='score-bar'><div class='schedule-carousel-wrapper'><button class='schedule-nav schedule-prev'>◀</button><div class='schedule-carousel-viewport'><div class='schedule-carousel'>{slides_html}</div></div><button class='schedule-nav schedule-next'>▶</button></div></div></div>"""
+
+    # --- 2. 戦績バー部分の構築 ---
     s = df["week"].astype(str)
     reg = df[~s.str.startswith("Pre") & ~df["week"].isin(POSTSEASON_WEEKS)].copy()
     played = reg[reg["win"].isin(["Win", "Lose", "Draw"])].copy()
@@ -219,7 +224,7 @@ def build_header_snippet_data(df):
     nfc_r = _count_record_schedule(played[played["_opp_conf"] == "NFC"])
     home_r = _count_record_schedule(played[played["home"] == "Home"])
     away_r = _count_record_schedule(played[played["home"] == "Away"])
-    streak_val = _compute_streak_schedule(played)
+    streak_v = _compute_streak_schedule(played)
 
     div_pill = (
         f"<span class='jax-record-pill jax-record-pill-division'><span class='jax-record-label'>Div</span> <span class='jax-record-num'>{div_r}</span></span>"
@@ -244,14 +249,16 @@ def build_header_snippet_data(df):
         splits.append(
             f"<span class='jax-record-pill'><span class='jax-record-label'>Away</span> <span class='jax-record-num'>{away_r}</span></span>"
         )
-    if streak_val:
+    if streak_v:
         splits.append(
-            f"<span class='jax-record-pill jax-record-streak'><span class='jax-record-label'>Streak</span> <span class='jax-record-num'>{streak_val}</span></span>"
+            f"<span class='jax-record-pill jax-record-streak'><span class='jax-record-label'>Streak</span> <span class='jax-record-num'>{streak_v}</span></span>"
         )
 
-    record_html = f"""<div id="jax-record-bar" class="jax-record-collapsible"><div class="jax-record-inner"><button class="jax-record-main" type="button" aria-expanded="false"><span class="jax-record-team">JAX</span><span class="jax-record-overall">{overall}</span>{div_pill}<span class="jax-record-chevron" aria-hidden="true">▼</span></button><div class="jax-record-details"><div class="jax-record-splits">{''.join(splits)}</div></div></div></div>"""
+    # 戦績バーの構造を理想のコードと統一
+    record_bar_html = f"""<div id="jax-record-bar" class="jax-record-collapsible"><div class="jax-record-inner"><button class="jax-record-main" type="button" aria-expanded="false"><span class="jax-record-team">JAX</span><span class="jax-record-overall">{overall}</span>{div_pill}<span class="jax-record-chevron" aria-hidden="true">▼</span></button><div class="jax-record-details"><div class="jax-record-splits">{''.join(splits)}</div></div></div></div>"""
 
-    return f'<div id="score-data-source">{score_html}</div><div id="record-data-source">{record_html}</div>'
+    # --- 3. 合体 (間に divider を挟む) ---
+    return f"{score_bar_html}<div class='header-divider'></div>{record_bar_html}"
 
 
 # ==========================================
