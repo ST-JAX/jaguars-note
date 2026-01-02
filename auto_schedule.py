@@ -180,52 +180,78 @@ def build_mobile_table(df):
     return html + "</tbody></table></div>"
 
 
-# --- 【追加箇所】ヘッダー専用のHTML生成（メインページに影響しない） ---
-def build_header_score_carousel(df):
+# ==========================================
+# 2.5 新設ロジック：ヘッダー専用Snippetの生成
+# ==========================================
+
+
+def build_header_snippet_data(df):
+    # --- スコアスライド作成 ---
     slides_html = ""
     for _, r in df.iterrows():
         if str(r["opponent"]).upper() == "BYE":
             slides_html += f"<div class='schedule-slide bye' data-date=''><div class='line1'><span class='week'>{r['week']}</span></div><div class='line2'><span class='opponent'>BYE</span></div></div>"
         else:
-            dt_obj = r["datetime"]
-            dt_display = dt_obj.strftime("%-m/%-d (%a) %H:%M JST") if not pd.isna(dt_obj) else "TBD"
             sym = "vs" if r["venue_class"] == "home" else "@"
-            slides_html += f"<div class='schedule-slide {r['class']}' data-date='{r['試合日時（日本時間）']}'><div class='line1'><span class='week'>{r['week']}</span>　{dt_display}</div><div class='line2'><span class='opponent'><span class='venue {r['venue_class']}'>{sym}</span><span class='team-badge' style='background:{r.get('bg','#ccc')};color:{r.get('fg','#000')};'>{r['opponent']}</span></span><span class='result'>{r['result']} {r['score']}</span></div></div>"
+            dt_obj = r["datetime"]
+            # data-dateをシンプルなISO形式（T00:00:00）に修正
+            clean_date = dt_obj.strftime("%Y-%m-%dT%H:%M:%S") if not pd.isna(dt_obj) else ""
+            dt_display = dt_obj.strftime("%-m/%-d (%a) %H:%M JST") if not pd.isna(dt_obj) else "TBD"
+            # 結果表示のロジック修正 (- - にならないように)
+            res_val = f"{r['result']} {r['score']}" if r["result"] in ["W", "L", "D"] else "-"
 
-    return f"""
-<button class='schedule-nav schedule-prev'>◀</button>
-<div class='schedule-carousel-viewport'><div class='schedule-carousel'>{slides_html}</div></div>
-<button class='schedule-nav schedule-next'>▶</button>
-"""
+            slides_html += f"""<div class='schedule-slide {r['class']}' data-date='{clean_date}'><div class='line1'><span class='week'>{r['week']}</span>　{dt_display}</div><div class='line2'><span class='opponent'><span class='venue {r['venue_class']}'>{sym}</span><span class='team-badge' style='background:{r.get('bg','#ccc')};color:{r.get('fg','#000')};'>{r['opponent']}</span></span><span class='result'>{res_val}</span></div></div>"""
 
+    score_html = f"<button class='schedule-nav schedule-prev'>◀</button><div class='schedule-carousel-viewport'><div class='schedule-carousel'>{slides_html}</div></div><button class='schedule-nav schedule-next'>▶</button>"
 
-def build_header_jax_record_bar(df):
-    # ヘッダー用のコンパクト版（12-4 + Divのみ）
-    played = df[
-        ~df["week"].astype(str).str.startswith("Pre")
-        & ~df["week"].isin(POSTSEASON_WEEKS)
-        & df["win"].isin(["Win", "Lose", "Draw"])
-    ]
+    # --- 戦績バー（開閉式・詳細項目付き）作成 ---
+    s = df["week"].astype(str)
+    reg = df[~s.str.startswith("Pre") & ~df["week"].isin(POSTSEASON_WEEKS)].copy()
+    played = reg[reg["win"].isin(["Win", "Lose", "Draw"])].copy()
     overall = _count_record_schedule(played) if not played.empty else "0-0"
-    div_record = _count_record_schedule(
-        played[(played["opponent"].map(lambda t: TEAM_INFO.get(str(t), (None, None))[1]) == JAX_DIV)]
-    )
+
+    conf_div_df = played["opponent"].map(lambda t: TEAM_INFO.get(str(t), (None, None))).apply(pd.Series)
+    conf_div_df.columns = ["_opp_conf", "_opp_div"]
+    played = played.join(conf_div_df)
+
+    div_r = _count_record_schedule(played[(played["_opp_conf"] == JAX_CONF) & (played["_opp_div"] == JAX_DIV)])
+    conf_r = _count_record_schedule(played[played["_opp_conf"] == JAX_CONF])
+    nfc_r = _count_record_schedule(played[played["_opp_conf"] == "NFC"])
+    home_r = _count_record_schedule(played[played["home"] == "Home"])
+    away_r = _count_record_schedule(played[played["home"] == "Away"])
+    streak_val = _compute_streak_schedule(played)
+
     div_pill = (
-        f"<span class='jax-record-pill jax-record-pill-division'><span class='jax-record-label'>Div</span> <span class='jax-record-num'>{div_record}</span></span>"
-        if div_record
+        f"<span class='jax-record-pill jax-record-pill-division'><span class='jax-record-label'>Div</span> <span class='jax-record-num'>{div_r}</span></span>"
+        if div_r
         else ""
     )
 
-    return f"""
-<div id="jax-record-bar" class="jax-record-collapsible">
-  <div class="jax-record-inner">
-    <button class="jax-record-main" type="button" aria-expanded="false">
-      <span class="jax-record-team">JAX</span><span class="jax-record-overall">{overall}</span>{div_pill}<span class="jax-record-chevron">▼</span>
-    </button>
-    <div class="jax-record-details"><div class="jax-record-splits"></div></div>
-  </div>
-</div>
-"""
+    splits = []
+    if conf_r:
+        splits.append(
+            f"<span class='jax-record-pill'><span class='jax-record-label'>Conf</span> <span class='jax-record-num'>{conf_r}</span></span>"
+        )
+    if nfc_r:
+        splits.append(
+            f"<span class='jax-record-pill'><span class='jax-record-label'>NFC</span> <span class='jax-record-num'>{nfc_r}</span></span>"
+        )
+    if home_r:
+        splits.append(
+            f"<span class='jax-record-pill'><span class='jax-record-label'>Home</span> <span class='jax-record-num'>{home_r}</span></span>"
+        )
+    if away_r:
+        splits.append(
+            f"<span class='jax-record-pill'><span class='jax-record-label'>Away</span> <span class='jax-record-num'>{away_r}</span></span>"
+        )
+    if streak_val:
+        splits.append(
+            f"<span class='jax-record-pill jax-record-streak'><span class='jax-record-label'>Streak</span> <span class='jax-record-num'>{streak_val}</span></span>"
+        )
+
+    record_html = f"""<div id="jax-record-bar" class="jax-record-collapsible"><div class="jax-record-inner"><button class="jax-record-main" type="button" aria-expanded="false"><span class="jax-record-team">JAX</span><span class="jax-record-overall">{overall}</span>{div_pill}<span class="jax-record-chevron" aria-hidden="true">▼</span></button><div class="jax-record-details"><div class="jax-record-splits">{''.join(splits)}</div></div></div></div>"""
+
+    return f'<div id="score-data-source">{score_html}</div><div id="record-data-source">{record_html}</div>'
 
 
 # ==========================================
@@ -263,6 +289,16 @@ def fetch_from_notion():
             }
         )
     return pd.DataFrame(rows)
+
+
+def update_hatena(page_id, title, content):
+    url = f"https://blog.hatena.ne.jp/{HATENA_USER}/{HATENA_BLOG}/atom/page/{page_id}"
+    created = datetime.datetime.now().isoformat() + "Z"
+    nonce = hashlib.sha1(str(random.random()).encode()).digest()
+    digest = base64.b64encode(hashlib.sha1(nonce + created.encode() + HATENA_API_KEY.encode()).digest()).decode()
+    wsse = f'UsernameToken Username="{HATENA_USER}", PasswordDigest="{digest}", Nonce="{base64.b64encode(nonce).decode()}", Created="{created}"'
+    xml = f'<?xml version="1.0" encoding="utf-8"?><entry xmlns="http://www.w3.org/2005/Atom"><title>{title}</title><content type="text/html">{escape(content)}</content></entry>'
+    requests.put(url, data=xml.encode("utf-8"), headers={"X-WSSE": wsse, "Content-Type": "application/xml"})
 
 
 def main():
@@ -391,35 +427,15 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 </script>"""
 
-        # 送信処理
-        wsse_created = datetime.datetime.now().isoformat() + "Z"
-        nonce = hashlib.sha1(str(random.random()).encode()).digest()
-        digest = base64.b64encode(
-            hashlib.sha1(nonce + wsse_created.encode() + HATENA_API_KEY.encode()).digest()
-        ).decode()
-        wsse = f'UsernameToken Username="{HATENA_USER}", PasswordDigest="{digest}", Nonce="{base64.b64encode(nonce).decode()}", Created="{wsse_created}"'
+        # メイン更新
+        update_hatena(HATENA_SCHEDULE_PAGE_ID, "2025 Game Schedule", full_html)
 
-        # 1. スケジュールメインページ更新
-        url_main = f"https://blog.hatena.ne.jp/{HATENA_USER}/{HATENA_BLOG}/atom/page/{HATENA_SCHEDULE_PAGE_ID}"
-        xml_main = f'<?xml version="1.0" encoding="utf-8"?><entry xmlns="http://www.w3.org/2005/Atom"><title>2025 Game Schedule</title><content type="text/html">{escape(full_html)}</content></entry>'
-        requests.put(
-            url_main, data=xml_main.encode("utf-8"), headers={"X-WSSE": wsse, "Content-Type": "application/xml"}
-        )
-
-        # 2. ヘッダー用Snippet更新（おまけとして追加）
+        # ヘッダー用Snippet更新
         if HATENA_LATEST_SCHEDULE_PAGE_ID:
-            snippet_html = f'<div id="score-data-source">{build_header_score_carousel(df)}</div><div id="record-data-source">{build_header_jax_record_bar(df)}</div>'
-            url_snippet = (
-                f"https://blog.hatena.ne.jp/{HATENA_USER}/{HATENA_BLOG}/atom/page/{HATENA_LATEST_SCHEDULE_PAGE_ID}"
-            )
-            xml_snippet = f'<?xml version="1.0" encoding="utf-8"?><entry xmlns="http://www.w3.org/2005/Atom"><title>LATEST_DATA</title><content type="text/html">{escape(snippet_html)}</content></entry>'
-            requests.put(
-                url_snippet,
-                data=xml_snippet.encode("utf-8"),
-                headers={"X-WSSE": wsse, "Content-Type": "application/xml"},
-            )
+            snippet_content = build_header_snippet_data(df)
+            update_hatena(HATENA_LATEST_SCHEDULE_PAGE_ID, "LATEST_DATA", snippet_content)
 
-        print("✨ 成功したよ、しょう！")
+        print("✨ すべての更新に成功したよ、しょう！")
     except Exception as e:
         print(f"エラー発生: {e}")
 
