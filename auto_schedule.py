@@ -185,7 +185,7 @@ def build_mobile_table(df):
 # ==========================================
 
 def build_header_snippet_data(df):
-    # --- 1. スコアカルーセル部分（シングルクォート使用、改行なし） ---
+    # --- 1. スコアスライド生成 ---
     slides_html = ""
     for _, r in df.iterrows():
         if str(r["opponent"]).upper() == "BYE":
@@ -194,28 +194,24 @@ def build_header_snippet_data(df):
             sym = "vs" if r["venue_class"] == "home" else "@"
             dt_obj = r["datetime"]
             clean_date = dt_obj.strftime("%Y-%m-%dT%H:%M:%S") if not pd.isna(dt_obj) else ""
-            # %-m, %-d でゼロ埋めを強制解除 (Windows環境なら %#m, %#d)
             try:
                 dt_display = dt_obj.strftime("%-m/%-d (%a) %H:%M JST")
             except:
                 dt_display = dt_obj.strftime("%#m/%#d (%a) %H:%M JST")
-
             res_val = f"{r['result']} {r['score']}" if r["result"] in ["W", "L", "D"] else "-"
-            # 1行で結合
             slides_html += f"<div class='schedule-slide {r['class']}' data-date='{clean_date}'><div class='line1'><span class='week'>{r['week']}</span>　{dt_display}</div><div class='line2'><span class='opponent'><span class='venue {r['venue_class']}'>{sym}</span><span class='team-badge' style='background:{r.get('bg','#ccc')};color:{r.get('fg','#000')};'>{r['opponent']}</span></span><span class='result'>{res_val}</span></div></div>"
 
-    score_bar = f"<div id='score-wrapper'><div id='score-bar'><div class='schedule-carousel-wrapper'><button class='schedule-nav schedule-prev'>◀</button><div class='schedule-carousel-viewport'><div class='schedule-carousel'>{slides_html}</div></div><button class='schedule-nav schedule-next'>▶</button></div></div></div>"
+    # score-bar部分
+    score_bar = f"<div id='score-bar'><div class='schedule-carousel-wrapper'><button class='schedule-nav schedule-prev'>◀</button><div class='schedule-carousel-viewport'><div class='schedule-carousel'>{slides_html}</div></div><button class='schedule-nav schedule-next'>▶</button></div></div>"
 
-    # --- 2. 戦績バー部分（理想のHTML構造と完全に一致させる） ---
+    # --- 2. 戦績データの計算 ---
     s = df["week"].astype(str)
     reg = df[~s.str.startswith("Pre") & ~df["week"].isin(POSTSEASON_WEEKS)].copy()
     played = reg[reg["win"].isin(["Win", "Lose", "Draw"])].copy()
     overall = _count_record_schedule(played) if not played.empty else "0-0"
-
     conf_div_df = played["opponent"].map(lambda t: TEAM_INFO.get(str(t), (None, None))).apply(pd.Series)
     conf_div_df.columns = ["_opp_conf", "_opp_div"]
     played = played.join(conf_div_df)
-
     div_r = _count_record_schedule(played[(played["_opp_conf"] == JAX_CONF) & (played["_opp_div"] == JAX_DIV)])
     conf_r = _count_record_schedule(played[played["_opp_conf"] == JAX_CONF])
     nfc_r = _count_record_schedule(played[played["_opp_conf"] == "NFC"])
@@ -228,7 +224,6 @@ def build_header_snippet_data(df):
         if div_r
         else ""
     )
-
     splits = []
     if conf_r:
         splits.append(
@@ -251,10 +246,10 @@ def build_header_snippet_data(df):
             f"<span class='jax-record-pill jax-record-streak'><span class='jax-record-label'>Streak</span> <span class='jax-record-num'>{streak_v}</span></span>"
         )
 
-    # スペースや改行を排除して構築
+    # jax-record-bar部分
     record_bar = f"<div id='jax-record-bar' class='jax-record-collapsible'><div class='jax-record-inner'><button class='jax-record-main' type='button' aria-expanded='false'><span class='jax-record-team'>JAX</span><span class='jax-record-overall'>{overall}</span>{div_pill}<span class='jax-record-chevron' aria-hidden='true'>▼</span></button><div class='jax-record-details'><div class='jax-record-splits'>{''.join(splits)}</div></div></div></div>"
 
-    # --- 3. 結合（間に空白なしのdividerを入れる） ---
+    # まとめて返す (dividerを挟む)
     return f"{score_bar}<div class='header-divider'></div>{record_bar}"
 
 # ==========================================
