@@ -247,10 +247,9 @@ def build_header_snippet_data(df):
         )
 
     # jax-record-bar部分
-    record_bar = f"<div id='jax-record-bar' class='jax-record-collapsible'><div class='jax-record-inner'><button class='jax-record-main' type='button' aria-expanded='false'><span class='jax-record-team'>JAX</span><span class='jax-record-overall'>{overall}</span>{div_pill}<span class='jax-record-chevron' aria-hidden='true'>▼</span></button><div class='jax-record-details'><div class='jax-record-splits'>{''.join(splits)}</div></div></div></div>"
+    record_bar = f"<div id='jax-record-bar'><div class='jax-record-inner'><button class='jax-record-main' type='button' aria-expanded='false'><span class='jax-record-team'>JAX</span><span class='jax-record-overall'>{overall}</span>{div_pill}<span class='jax-record-chevron' aria-hidden='true'>▼</span></button><div class='jax-record-details'><div class='jax-record-splits'>{''.join(splits)}</div></div></div></div>"
 
-    # まとめて返す (dividerを挟む)
-    return f"{score_bar}<div class='header-divider'></div>{record_bar}"
+    return f"{score_bar}{record_bar}"
 
 # ==========================================
 # 3. メイン処理（API取得と更新）
