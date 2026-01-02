@@ -184,9 +184,8 @@ def build_mobile_table(df):
 # 2.5 新設ロジック：ヘッダー専用Snippetの生成
 # ==========================================
 
-
 def build_header_snippet_data(df):
-    # --- 1. スコアカルーセル部分の構築 ---
+    # --- 1. スコアカルーセル部分（シングルクォート使用、改行なし） ---
     slides_html = ""
     for _, r in df.iterrows():
         if str(r["opponent"]).upper() == "BYE":
@@ -195,21 +194,19 @@ def build_header_snippet_data(df):
             sym = "vs" if r["venue_class"] == "home" else "@"
             dt_obj = r["datetime"]
             clean_date = dt_obj.strftime("%Y-%m-%dT%H:%M:%S") if not pd.isna(dt_obj) else ""
-            # 日付フォーマットを 8/10 (Sun) 形式に (ゼロ埋めなしは %-m, %-d)
-            dt_display = dt_obj.strftime("%-m/%-d (%a) %H:%M JST") if not pd.isna(dt_obj) else "TBD"
+            # %-m, %-d でゼロ埋めを強制解除 (Windows環境なら %#m, %#d)
+            try:
+                dt_display = dt_obj.strftime("%-m/%-d (%a) %H:%M JST")
+            except:
+                dt_display = dt_obj.strftime("%#m/%#d (%a) %H:%M JST")
 
-            # 結果表示のロジック: Win/Lose/Drawがある場合のみスコアを出す
-            if r["result"] in ["W", "L", "D"]:
-                res_val = f"{r['result']} {r['score']}"
-            else:
-                res_val = "-"
-
+            res_val = f"{r['result']} {r['score']}" if r["result"] in ["W", "L", "D"] else "-"
+            # 1行で結合
             slides_html += f"<div class='schedule-slide {r['class']}' data-date='{clean_date}'><div class='line1'><span class='week'>{r['week']}</span>　{dt_display}</div><div class='line2'><span class='opponent'><span class='venue {r['venue_class']}'>{sym}</span><span class='team-badge' style='background:{r.get('bg','#ccc')};color:{r.get('fg','#000')};'>{r['opponent']}</span></span><span class='result'>{res_val}</span></div></div>"
 
-    # カルーセルのラッパー構造を理想のコードと統一
-    score_bar_html = f"""<div id='score-wrapper'><div id='score-bar'><div class='schedule-carousel-wrapper'><button class='schedule-nav schedule-prev'>◀</button><div class='schedule-carousel-viewport'><div class='schedule-carousel'>{slides_html}</div></div><button class='schedule-nav schedule-next'>▶</button></div></div></div>"""
+    score_bar = f"<div id='score-wrapper'><div id='score-bar'><div class='schedule-carousel-wrapper'><button class='schedule-nav schedule-prev'>◀</button><div class='schedule-carousel-viewport'><div class='schedule-carousel'>{slides_html}</div></div><button class='schedule-nav schedule-next'>▶</button></div></div></div>"
 
-    # --- 2. 戦績バー部分の構築 ---
+    # --- 2. 戦績バー部分（理想のHTML構造と完全に一致させる） ---
     s = df["week"].astype(str)
     reg = df[~s.str.startswith("Pre") & ~df["week"].isin(POSTSEASON_WEEKS)].copy()
     played = reg[reg["win"].isin(["Win", "Lose", "Draw"])].copy()
@@ -254,17 +251,15 @@ def build_header_snippet_data(df):
             f"<span class='jax-record-pill jax-record-streak'><span class='jax-record-label'>Streak</span> <span class='jax-record-num'>{streak_v}</span></span>"
         )
 
-    # 戦績バーの構造を理想のコードと統一
-    record_bar_html = f"""<div id="jax-record-bar" class="jax-record-collapsible"><div class="jax-record-inner"><button class="jax-record-main" type="button" aria-expanded="false"><span class="jax-record-team">JAX</span><span class="jax-record-overall">{overall}</span>{div_pill}<span class="jax-record-chevron" aria-hidden="true">▼</span></button><div class="jax-record-details"><div class="jax-record-splits">{''.join(splits)}</div></div></div></div>"""
+    # スペースや改行を排除して構築
+    record_bar = f"<div id='jax-record-bar' class='jax-record-collapsible'><div class='jax-record-inner'><button class='jax-record-main' type='button' aria-expanded='false'><span class='jax-record-team'>JAX</span><span class='jax-record-overall'>{overall}</span>{div_pill}<span class='jax-record-chevron' aria-hidden='true'>▼</span></button><div class='jax-record-details'><div class='jax-record-splits'>{''.join(splits)}</div></div></div></div>"
 
-    # --- 3. 合体 (間に divider を挟む) ---
-    return f"{score_bar_html}<div class='header-divider'></div>{record_bar_html}"
-
+    # --- 3. 結合（間に空白なしのdividerを入れる） ---
+    return f"{score_bar}<div class='header-divider'></div>{record_bar}"
 
 # ==========================================
 # 3. メイン処理（API取得と更新）
 # ==========================================
-
 
 def fetch_from_notion():
     url = f"https://api.notion.com/v1/databases/{NOTION_SCHEDULE_DB_ID}/query"
