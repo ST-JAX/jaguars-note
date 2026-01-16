@@ -10,7 +10,7 @@ from requests.auth import HTTPBasicAuth
 # 0. SEASON SETTINGS (シーズンが変わったらここを変更してください)
 # ==============================================================================
 STATS_YEAR = "2024"
-LEAVE_FILTER_YEAR = "2025"
+LEAVE_FILTER_YEAR = "2025"  # Leave(数値)と比較する年
 
 # ==============================================================================
 # 1. 設定・定数
@@ -23,12 +23,13 @@ HATENA_BLOG_ID = os.environ.get('HATENA_BLOG')
 HATENA_API_KEY = os.environ.get('HATENA_API_KEY')
 TARGET_ENTRY_ID = os.environ.get('HATENA_LATEST_ROSTER_PAGE_ID')
 
-# ★追加: Notion API用フィルター設定 (Status != Left)
+# Notion API用フィルター設定 (Status != Left)
+# ※APIレベルでは最低限のフィルタリングのみ行い、細かい条件はPythonで処理します
 NOTION_FILTER = {
     "and": [
         {
             "property": "Status",
-            "select": {
+            "status": {  # Statusプロパティは "status" キーを使用
                 "does_not_equal": "Left"
             }
         }
@@ -369,6 +370,7 @@ document.addEventListener("DOMContentLoaded", function () {
 # 2. Notion Fetching Logic (Direct HTTP Request)
 # ==============================================================================
 def get_property_value(page, prop_name):
+    """プロパティの型に応じて値を取り出す"""
     props = page.get("properties", {})
     if prop_name not in props: return ""
     
@@ -384,6 +386,8 @@ def get_property_value(page, prop_name):
             return prop["number"] if prop["number"] is not None else ""
         elif prop_type == "select":
             return prop["select"]["name"] if prop["select"] else ""
+        elif prop_type == "status": # ★修正: Status型に対応
+            return prop["status"]["name"] if prop["status"] else ""
         elif prop_type == "multi_select":
             return ",".join([s["name"] for s in prop["multi_select"]]) if prop["multi_select"] else ""
         elif prop_type == "date":
@@ -414,6 +418,7 @@ def fetch_roster_data():
     print("Fetching data from Notion...", file=sys.stderr)
 
     while has_more:
+        # ★修正: Statusプロパティ用のフィルタで取得
         payload = {"filter": NOTION_FILTER}
         if next_cursor:
             payload["start_cursor"] = next_cursor
@@ -436,6 +441,7 @@ def fetch_roster_data():
             "Name": get_property_value(page, "Name"),
             "#": get_property_value(page, "#"),
             "Position": get_property_value(page, "Position"),
+            "Sub Position": get_property_value(page, "Sub Position"), # ★追加
             "Status": get_property_value(page, "Status"),
             "College": get_property_value(page, "College"),
             "Height": get_property_value(page, "Height"),
@@ -511,7 +517,7 @@ def format_cap(val):
 def determine_status(row):
     # Leaveに値が入っている場合は強制的にout扱い
     leave_val = str(row.get("Leave", "")).strip()
-    if leave_val and leave_val != "nan":
+    if leave_val and leave_val != "nan" and leave_val != "":
         return "out"
         
     s = str(row.get("Status", "")).strip().lower()
@@ -525,7 +531,7 @@ def determine_status(row):
 # ★ソート用ランク付け関数 (ユーザー指定の順序)
 def get_status_rank(row):
     s = str(row.get("Status", "")).strip()
-    # 文字列検索で判定 (前方一致など)
+    # 文字列検索で判定
     if "Active" in s: return 0
     if "IR" in s: return 1
     if "PUP" in s: return 2
@@ -560,14 +566,20 @@ def generate_html_content(df):
     df["Pos_Order"] = df["Primary_Pos"].map(position_order)
     
     # ★フィルターロジック: Leaveが未入力あるいは指定年(LEAVE_FILTER_YEAR)を含む
+    # LeaveはNumber型なので、一度文字列化して判定
     def should_keep(row):
-        leave_val = str(row["Leave"]).strip()
-        # 未入力(nan, "", "nan") 
-        if not leave_val or leave_val.lower() == "nan":
+        # get_property_valueで数値は数値として返ってくる可能性があるため文字列化
+        leave_raw = row["Leave"]
+        if leave_raw == "" or leave_raw is None:
             return True
-        # 指定年を含む場合
-        if LEAVE_FILTER_YEAR in leave_val:
+        
+        # 数値の場合は文字列化 (例: 2025 -> "2025")
+        # 2025.0 となる場合も考慮して .0 を消す
+        s_val = str(leave_raw).replace(".0", "")
+        
+        if s_val == LEAVE_FILTER_YEAR:
             return True
+            
         return False
 
     df = df[df.apply(should_keep, axis=1)]
