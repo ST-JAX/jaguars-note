@@ -3,6 +3,7 @@ import sys
 import pandas as pd
 import requests
 import json
+import html  # ★追加: HTMLエスケープ用
 from datetime import datetime
 from requests.auth import HTTPBasicAuth
 
@@ -23,13 +24,12 @@ HATENA_BLOG_ID = os.environ.get('HATENA_BLOG')
 HATENA_API_KEY = os.environ.get('HATENA_API_KEY')
 TARGET_ENTRY_ID = os.environ.get('HATENA_LATEST_ROSTER_PAGE_ID')
 
-# Notion API用フィルター設定 (Status != Left)
-# ※APIレベルでは最低限のフィルタリングのみ行い、細かい条件はPythonで処理します
+# Notion API用フィルター設定
 NOTION_FILTER = {
     "and": [
         {
             "property": "Status",
-            "status": {  # Statusプロパティは "status" キーを使用
+            "status": {
                 "does_not_equal": "Left"
             }
         }
@@ -54,7 +54,7 @@ POSITION_IMAGES = {
     "RS": "https://cdn-ak.f.st-hatena.com/images/fotolife/S/StaiL21/20251214/20251214042043.png",
 }
 
-# Control Panel HTML (SYSTEM: ONLINE削除, img src空欄対応済)
+# Control Panel HTML
 CONTROL_PANEL_HTML = """
   <div class="control-panel">
     <div class="panel-header">
@@ -370,7 +370,6 @@ document.addEventListener("DOMContentLoaded", function () {
 # 2. Notion Fetching Logic (Direct HTTP Request)
 # ==============================================================================
 def get_property_value(page, prop_name):
-    """プロパティの型に応じて値を取り出す"""
     props = page.get("properties", {})
     if prop_name not in props: return ""
     
@@ -386,7 +385,7 @@ def get_property_value(page, prop_name):
             return prop["number"] if prop["number"] is not None else ""
         elif prop_type == "select":
             return prop["select"]["name"] if prop["select"] else ""
-        elif prop_type == "status": # ★修正: Status型に対応
+        elif prop_type == "status": 
             return prop["status"]["name"] if prop["status"] else ""
         elif prop_type == "multi_select":
             return ",".join([s["name"] for s in prop["multi_select"]]) if prop["multi_select"] else ""
@@ -418,7 +417,6 @@ def fetch_roster_data():
     print("Fetching data from Notion...", file=sys.stderr)
 
     while has_more:
-        # ★修正: Statusプロパティ用のフィルタで取得
         payload = {"filter": NOTION_FILTER}
         if next_cursor:
             payload["start_cursor"] = next_cursor
@@ -436,12 +434,11 @@ def fetch_roster_data():
 
     data_list = []
     for page in results:
-        # プロパティ取得
         item = {
             "Name": get_property_value(page, "Name"),
             "#": get_property_value(page, "#"),
             "Position": get_property_value(page, "Position"),
-            "Sub Position": get_property_value(page, "Sub Position"), # ★追加
+            "Sub Position": get_property_value(page, "Sub Position"),
             "Status": get_property_value(page, "Status"),
             "College": get_property_value(page, "College"),
             "Height": get_property_value(page, "Height"),
@@ -462,10 +459,9 @@ def fetch_roster_data():
             "Leave": get_property_value(page, "Leave")
         }
         
-        # Statsカラムの動的取得
         props = page.get("properties", {})
         for key in props.keys():
-            if key.startswith(f"Stats -"): # Stats -General- (2024) etc
+            if key.startswith(f"Stats -"): 
                 item[key] = get_property_value(page, key)
         
         if "Combine" in props:
@@ -515,7 +511,6 @@ def format_cap(val):
         return "-", 0
 
 def determine_status(row):
-    # Leaveに値が入っている場合は強制的にout扱い
     leave_val = str(row.get("Leave", "")).strip()
     if leave_val and leave_val != "nan" and leave_val != "":
         return "out"
@@ -528,10 +523,8 @@ def determine_status(row):
     }
     return mapping.get(s, "active")
 
-# ★ソート用ランク付け関数 (ユーザー指定の順序)
 def get_status_rank(row):
     s = str(row.get("Status", "")).strip()
-    # 文字列検索で判定
     if "Active" in s: return 0
     if "IR" in s: return 1
     if "PUP" in s: return 2
@@ -539,7 +532,7 @@ def get_status_rank(row):
     if "PS" in s: return 4
     if "Suspended" in s: return 5
     if "Exempt" in s or "International" in s: return 6
-    return 99 # その他
+    return 99
 
 def get_team_class(team_name):
     if not team_name:
@@ -548,7 +541,6 @@ def get_team_class(team_name):
     return f"team-{slug}"
 
 def generate_html_content(df):
-    # ★ユーザー指定のポジション順序 (RS追加)
     position_order = {
         "QB": 0, "RB": 1, "WR": 2, "TE": 3, "OL": 4, 
         "DL": 5, "EDGE": 6, "LB": 7, "CB": 8, "S": 9, 
@@ -565,38 +557,23 @@ def generate_html_content(df):
     df["Primary_Pos"] = df["Position"].apply(get_primary)
     df["Pos_Order"] = df["Primary_Pos"].map(position_order)
     
-    # ★フィルターロジック: Leaveが未入力あるいは指定年(LEAVE_FILTER_YEAR)を含む
-    # LeaveはNumber型なので、一度文字列化して判定
     def should_keep(row):
-        # get_property_valueで数値は数値として返ってくる可能性があるため文字列化
         leave_raw = row["Leave"]
         if leave_raw == "" or leave_raw is None:
             return True
-        
-        # 数値の場合は文字列化 (例: 2025 -> "2025")
-        # 2025.0 となる場合も考慮して .0 を消す
         s_val = str(leave_raw).replace(".0", "")
-        
         if s_val == LEAVE_FILTER_YEAR:
             return True
-            
         return False
 
     df = df[df.apply(should_keep, axis=1)]
-    
-    # ソート用ランク計算
     df["Status_Rank"] = df.apply(get_status_rank, axis=1)
-
-    # ★ソート実行: Status(昇順) -> Position(昇順) -> #(昇順)
     df = df.sort_values(by=["Status_Rank", "Pos_Order", "#"], ascending=[True, True, True])
 
-    # 指定年のSTATSカラムのみ抽出
     target_stats_str = f"({STATS_YEAR})"
     stats_cols = [c for c in df.columns if c.startswith("Stats -") and target_stats_str in c]
-    
     current_year = datetime.now().year
 
-    # --- HTML組み立て ---
     html_lines = []
     html_lines.append('<div class="roster-wrapper">')
     html_lines.append(CONTROL_PANEL_HTML)
@@ -658,7 +635,6 @@ def generate_html_content(df):
         for col in stats_cols:
             raw = row.get(col, "")
             if pd.isna(raw) or not str(raw).strip(): continue
-            # "Stats -Passing- (2024)" -> "Passing"
             cat = col.replace("Stats -", "").replace(target_stats_str, "").strip("- ")
             items = str(raw).split(" / ")
             fmt_items = []
@@ -812,6 +788,7 @@ def update_hatena_blog(content_body):
         print("[ERROR] TARGET_ENTRY_ID is missing.", file=sys.stderr)
         return
 
+    # エンドポイント: 固定ページ用 (/atom/page/)
     url = f'https://blog.hatena.ne.jp/{HATENA_ID}/{HATENA_BLOG_ID}/atom/page/{TARGET_ENTRY_ID}'
     
     print(f"Fetching current entry info from {url}...", file=sys.stderr)
@@ -830,16 +807,17 @@ def update_hatena_blog(content_body):
         print(f"[ERROR] Failed to get current entry: {e}", file=sys.stderr)
         return
 
-    categories_xml = "\n".join([f'<category term="{c}" />' for c in categories])
+    # XML構築（★ここが修正ポイント: html.escapeでエスケープ処理）
+    escaped_body = html.escape(content_body)
+    escaped_title = html.escape(title)
+    categories_xml = "\n".join([f'<category term="{html.escape(c)}" />' for c in categories])
     
     xml_data = f"""<?xml version="1.0" encoding="utf-8"?>
 <entry xmlns="http://www.w3.org/2005/Atom"
        xmlns:app="http://www.w3.org/2007/app">
-  <title>{title}</title>
+  <title>{escaped_title}</title>
   {categories_xml}
-  <content type="text/html">
-{content_body}
-  </content>
+  <content type="text/html">{escaped_body}</content>
   <app:control>
     <app:draft>no</app:draft>
   </app:control>
