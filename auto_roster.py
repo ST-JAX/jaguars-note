@@ -668,15 +668,22 @@ def generate_html_content(df):
             card_extra_class += " is-new"
             badge_new_block = '<div class="pop-badge-wrapper is-new"><span class="pop-badge badge-new">NEW</span></div>'
 
-        # ★修正: バッジ複数表示ロジック
-        if "All-Pro" in honors:
+        # ★修正: All-Pro 1st/2ndの識別とカード色設定
+        if "All-Pro" in honors: # 1stも2ndも "All-Pro" という文字を含むためこれでOK
             card_extra_class += " is-allpro"
         elif "Pro Bowl" in honors:
             card_extra_class += " is-probowl"
 
+        # バッジの文字列生成 (1st/2ndの区別)
         honor_spans = ""
-        if "All-Pro" in honors:
+        if "All-Pro 1st" in honors:
+            honor_spans += '<span class="pop-badge badge-honor">ALL-PRO 1st</span>'
+        elif "All-Pro 2nd" in honors:
+            honor_spans += '<span class="pop-badge badge-honor">ALL-PRO 2nd</span>'
+        # 万が一 "All-Pro" だけの設定があった場合のフォールバック（または過去データ用）
+        elif "All-Pro" in honors and "1st" not in honors and "2nd" not in honors:
             honor_spans += '<span class="pop-badge badge-honor">ALL-PRO</span>'
+
         if "Pro Bowl" in honors:
             honor_spans += '<span class="pop-badge badge-honor">PRO BOWL</span>'
         
