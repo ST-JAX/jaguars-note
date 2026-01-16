@@ -42,4 +42,4 @@ jobs:
         run: |
           python auto_schedule.py
           python auto_news.py
-          python update_roster.py
+          python auto_roster.py
