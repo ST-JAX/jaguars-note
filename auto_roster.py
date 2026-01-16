@@ -3,15 +3,24 @@ import sys
 import pandas as pd
 import requests
 import json
-import html  # ★追加: HTMLエスケープ用
+import html
 from datetime import datetime
 from requests.auth import HTTPBasicAuth
 
 # ==============================================================================
-# 0. SEASON SETTINGS (シーズンが変わったらここを変更してください)
+# 0. SEASON SETTINGS (シーズンが変わったら「ここだけ」変更してください)
 # ==============================================================================
-STATS_YEAR = "2024"
-LEAVE_FILTER_YEAR = "2025"  # Leave(数値)と比較する年
+# ★現在のシーズンを設定 (例: 2025)
+CURRENT_SEASON = 2025
+
+# --- 以下はルールに従って自動計算されます ---
+# 1. スタッツは基本的に「前のシーズン」のもの (例: 2024)
+STATS_YEAR = str(CURRENT_SEASON - 1)
+
+# 2. 退団年は「そのシーズン」のものだけ表示 (例: 2025)
+LEAVE_FILTER_YEAR = str(CURRENT_SEASON)
+
+# (FA判定はロジック内で CURRENT_SEASON + 1 として処理されます)
 
 # ==============================================================================
 # 1. 設定・定数
@@ -370,6 +379,7 @@ document.addEventListener("DOMContentLoaded", function () {
 # 2. Notion Fetching Logic (Direct HTTP Request)
 # ==============================================================================
 def get_property_value(page, prop_name):
+    """プロパティの型に応じて値を取り出す"""
     props = page.get("properties", {})
     if prop_name not in props: return ""
     
@@ -434,6 +444,7 @@ def fetch_roster_data():
 
     data_list = []
     for page in results:
+        # プロパティ取得
         item = {
             "Name": get_property_value(page, "Name"),
             "#": get_property_value(page, "#"),
@@ -459,6 +470,7 @@ def fetch_roster_data():
             "Leave": get_property_value(page, "Leave")
         }
         
+        # Statsカラムの動的取得
         props = page.get("properties", {})
         for key in props.keys():
             if key.startswith(f"Stats -"): 
@@ -511,6 +523,7 @@ def format_cap(val):
         return "-", 0
 
 def determine_status(row):
+    # Leaveに値が入っている場合は強制的にout扱い
     leave_val = str(row.get("Leave", "")).strip()
     if leave_val and leave_val != "nan" and leave_val != "":
         return "out"
@@ -523,6 +536,7 @@ def determine_status(row):
     }
     return mapping.get(s, "active")
 
+# ★ソート用ランク付け関数 (ユーザー指定の順序)
 def get_status_rank(row):
     s = str(row.get("Status", "")).strip()
     if "Active" in s: return 0
@@ -557,6 +571,7 @@ def generate_html_content(df):
     df["Primary_Pos"] = df["Position"].apply(get_primary)
     df["Pos_Order"] = df["Primary_Pos"].map(position_order)
     
+    # ★フィルターロジック: Leaveが未入力あるいは指定年(LEAVE_FILTER_YEAR)を含む
     def should_keep(row):
         leave_raw = row["Leave"]
         if leave_raw == "" or leave_raw is None:
@@ -572,8 +587,8 @@ def generate_html_content(df):
 
     target_stats_str = f"({STATS_YEAR})"
     stats_cols = [c for c in df.columns if c.startswith("Stats -") and target_stats_str in c]
-    current_year = datetime.now().year
-
+    
+    # --- HTML組み立て ---
     html_lines = []
     html_lines.append('<div class="roster-wrapper">')
     html_lines.append(CONTROL_PANEL_HTML)
@@ -628,7 +643,9 @@ def generate_html_content(df):
 
         fa_year_raw = row.get("FA", "---")
         fa_year = str(int(float(fa_year_raw))) if str(fa_year_raw).replace('.','').isdigit() else str(fa_year_raw)
-        is_expiring = "is-expiring" if fa_year == str(current_year + 1) else ""
+        
+        # ★修正: CURRENT_SEASON + 1 をFA年として判定
+        is_expiring = "is-expiring" if fa_year == str(CURRENT_SEASON + 1) else ""
 
         # Stats
         stats_li = ""
@@ -670,7 +687,8 @@ def generate_html_content(df):
         badge_honor_block = ""
         card_extra_class = ""
         
-        if join_year == str(current_year):
+        # ★修正: CURRENT_SEASONと比較
+        if join_year == str(CURRENT_SEASON):
             card_extra_class += " is-new"
             badge_new_block = '<div class="pop-badge-wrapper is-new"><span class="pop-badge badge-new">NEW</span></div>'
 
@@ -807,7 +825,7 @@ def update_hatena_blog(content_body):
         print(f"[ERROR] Failed to get current entry: {e}", file=sys.stderr)
         return
 
-    # XML構築（★ここが修正ポイント: html.escapeでエスケープ処理）
+    # XML構築（HTMLエスケープ）
     escaped_body = html.escape(content_body)
     escaped_title = html.escape(title)
     categories_xml = "\n".join([f'<category term="{html.escape(c)}" />' for c in categories])
