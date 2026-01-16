@@ -1,18 +1,15 @@
 import os
 import sys
 import pandas as pd
-from datetime import datetime
-from notion_client import Client
 import requests
+import json
+from datetime import datetime
 from requests.auth import HTTPBasicAuth
 
 # ==============================================================================
 # 0. SEASON SETTINGS (シーズンが変わったらここを変更してください)
 # ==============================================================================
-# Statsカラムの検索に使う年 (例: Stats -Passing- (2024) なら "2024")
 STATS_YEAR = "2024"
-
-# Leave判定に使う年 (この年を含む、または空欄の選手を表示)
 LEAVE_FILTER_YEAR = "2025"
 
 # ==============================================================================
@@ -25,6 +22,18 @@ HATENA_ID = os.environ.get('HATENA_USER')
 HATENA_BLOG_ID = os.environ.get('HATENA_BLOG')
 HATENA_API_KEY = os.environ.get('HATENA_API_KEY')
 TARGET_ENTRY_ID = os.environ.get('HATENA_LATEST_ROSTER_PAGE_ID')
+
+# ★追加: Notion API用フィルター設定 (Status != Left)
+NOTION_FILTER = {
+    "and": [
+        {
+            "property": "Status",
+            "select": {
+                "does_not_equal": "Left"
+            }
+        }
+    ]
+}
 
 # 画像URLマッピング
 POSITION_IMAGES = {
@@ -44,7 +53,7 @@ POSITION_IMAGES = {
     "RS": "https://cdn-ak.f.st-hatena.com/images/fotolife/S/StaiL21/20251214/20251214042043.png",
 }
 
-# Control Panel HTML
+# Control Panel HTML (SYSTEM: ONLINE削除, img src空欄対応済)
 CONTROL_PANEL_HTML = """
   <div class="control-panel">
     <div class="panel-header">
@@ -357,7 +366,7 @@ document.addEventListener("DOMContentLoaded", function () {
 """
 
 # ==============================================================================
-# 2. Notion Fetching Logic
+# 2. Notion Fetching Logic (Direct HTTP Request)
 # ==============================================================================
 def get_property_value(page, prop_name):
     props = page.get("properties", {})
@@ -390,8 +399,14 @@ def get_property_value(page, prop_name):
     return ""
 
 def fetch_roster_data():
-    """Notionから全データを取得"""
-    notion = Client(auth=NOTION_API_KEY)
+    """requestsを使ってNotionから全データを取得"""
+    url = f"https://api.notion.com/v1/databases/{ROSTER_DB_ID}/query"
+    headers = {
+        "Authorization": f"Bearer {NOTION_API_KEY}",
+        "Notion-Version": "2022-06-28",
+        "Content-Type": "application/json"
+    }
+    
     results = []
     has_more = True
     next_cursor = None
@@ -399,14 +414,20 @@ def fetch_roster_data():
     print("Fetching data from Notion...", file=sys.stderr)
 
     while has_more:
-        # DB全体を取得
-        response = notion.databases.query(
-            database_id=ROSTER_DB_ID,
-            start_cursor=next_cursor
-        )
-        results.extend(response["results"])
-        has_more = response["has_more"]
-        next_cursor = response["next_cursor"]
+        payload = {"filter": NOTION_FILTER}
+        if next_cursor:
+            payload["start_cursor"] = next_cursor
+            
+        resp = requests.post(url, headers=headers, json=payload)
+        
+        if resp.status_code != 200:
+            print(f"[ERROR] Notion API Failed: {resp.text}", file=sys.stderr)
+            break
+            
+        data = resp.json()
+        results.extend(data.get("results", []))
+        has_more = data.get("has_more", False)
+        next_cursor = data.get("next_cursor")
 
     data_list = []
     for page in results:
