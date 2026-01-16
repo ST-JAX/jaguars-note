@@ -10,17 +10,9 @@ from requests.auth import HTTPBasicAuth
 # ==============================================================================
 # 0. SEASON SETTINGS (シーズンが変わったら「ここだけ」変更してください)
 # ==============================================================================
-# ★現在のシーズンを設定 (例: 2025)
 CURRENT_SEASON = 2025
-
-# --- 以下はルールに従って自動計算されます ---
-# 1. スタッツは基本的に「前のシーズン」のもの (例: 2024)
 STATS_YEAR = str(CURRENT_SEASON - 1)
-
-# 2. 退団年は「そのシーズン」のものだけ表示 (例: 2025)
 LEAVE_FILTER_YEAR = str(CURRENT_SEASON)
-
-# (FA判定はロジック内で CURRENT_SEASON + 1 として処理されます)
 
 # ==============================================================================
 # 1. 設定・定数
@@ -33,7 +25,6 @@ HATENA_BLOG_ID = os.environ.get('HATENA_BLOG')
 HATENA_API_KEY = os.environ.get('HATENA_API_KEY')
 TARGET_ENTRY_ID = os.environ.get('HATENA_LATEST_ROSTER_PAGE_ID')
 
-# Notion API用フィルター設定
 NOTION_FILTER = {
     "and": [
         {
@@ -63,7 +54,6 @@ POSITION_IMAGES = {
     "RS": "https://cdn-ak.f.st-hatena.com/images/fotolife/S/StaiL21/20251214/20251214042043.png",
 }
 
-# Control Panel HTML
 CONTROL_PANEL_HTML = """
   <div class="control-panel">
     <div class="panel-header">
@@ -209,7 +199,7 @@ CONTROL_PANEL_HTML = """
           </div>
           <div class="option-row">
             <label class="checkbox-label" for="hideOut">
-              <input id="hideOut" type="checkbox" /> Hide Former Players
+              <input id="hideOut" type="checkbox" checked /> Hide Former Players
             </label>
           </div>
         </div>
@@ -218,7 +208,6 @@ CONTROL_PANEL_HTML = """
   </div>
 """
 
-# JS Content
 JS_CONTENT = """
 <p>
 <script>
@@ -370,16 +359,14 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
   }
+  
+  doFilterAndSort();
 });
 </script>
 </p>
 """
 
-# ==============================================================================
-# 2. Notion Fetching Logic (Direct HTTP Request)
-# ==============================================================================
 def get_property_value(page, prop_name):
-    """プロパティの型に応じて値を取り出す"""
     props = page.get("properties", {})
     if prop_name not in props: return ""
     
@@ -412,7 +399,6 @@ def get_property_value(page, prop_name):
     return ""
 
 def fetch_roster_data():
-    """requestsを使ってNotionから全データを取得"""
     url = f"https://api.notion.com/v1/databases/{ROSTER_DB_ID}/query"
     headers = {
         "Authorization": f"Bearer {NOTION_API_KEY}",
@@ -427,7 +413,8 @@ def fetch_roster_data():
     print("Fetching data from Notion...", file=sys.stderr)
 
     while has_more:
-        payload = {"filter": NOTION_FILTER}
+        # ★全データを取得
+        payload = {}
         if next_cursor:
             payload["start_cursor"] = next_cursor
             
@@ -444,7 +431,6 @@ def fetch_roster_data():
 
     data_list = []
     for page in results:
-        # プロパティ取得
         item = {
             "Name": get_property_value(page, "Name"),
             "#": get_property_value(page, "#"),
@@ -470,7 +456,6 @@ def fetch_roster_data():
             "Leave": get_property_value(page, "Leave")
         }
         
-        # Statsカラムの動的取得
         props = page.get("properties", {})
         for key in props.keys():
             if key.startswith(f"Stats -"): 
@@ -485,10 +470,6 @@ def fetch_roster_data():
     print(f"Fetched {len(df)} records.", file=sys.stderr)
     return df
 
-# ==============================================================================
-# 3. HTML Generation & Main Logic
-# ==============================================================================
-# (Helper functions same as before)
 def feet_to_cm(height_str):
     try:
         parts = str(height_str).split("-")
@@ -523,7 +504,6 @@ def format_cap(val):
         return "-", 0
 
 def determine_status(row):
-    # Leaveに値が入っている場合は強制的にout扱い
     leave_val = str(row.get("Leave", "")).strip()
     if leave_val and leave_val != "nan" and leave_val != "":
         return "out"
@@ -536,9 +516,13 @@ def determine_status(row):
     }
     return mapping.get(s, "active")
 
-# ★ソート用ランク付け関数 (ユーザー指定の順序)
 def get_status_rank(row):
     s = str(row.get("Status", "")).strip()
+    # Leftは最下位
+    leave_val = str(row.get("Leave", "")).strip()
+    if leave_val and leave_val != "nan" and leave_val != "":
+        return 99
+
     if "Active" in s: return 0
     if "IR" in s: return 1
     if "PUP" in s: return 2
@@ -571,7 +555,6 @@ def generate_html_content(df):
     df["Primary_Pos"] = df["Position"].apply(get_primary)
     df["Pos_Order"] = df["Primary_Pos"].map(position_order)
     
-    # ★フィルターロジック: Leaveが未入力あるいは指定年(LEAVE_FILTER_YEAR)を含む
     def should_keep(row):
         leave_raw = row["Leave"]
         if leave_raw == "" or leave_raw is None:
@@ -583,12 +566,11 @@ def generate_html_content(df):
 
     df = df[df.apply(should_keep, axis=1)]
     df["Status_Rank"] = df.apply(get_status_rank, axis=1)
-    df = df.sort_values(by=["Status_Rank", "Pos_Order", "#"], ascending=[True, True, True])
+    df = df.sort_values(by=["Pos_Order", "Status_Rank", "#"], ascending=[True, True, True])
 
     target_stats_str = f"({STATS_YEAR})"
     stats_cols = [c for c in df.columns if c.startswith("Stats -") and target_stats_str in c]
     
-    # --- HTML組み立て ---
     html_lines = []
     html_lines.append('<div class="roster-wrapper">')
     html_lines.append(CONTROL_PANEL_HTML)
@@ -632,7 +614,6 @@ def generate_html_content(df):
         acq_team_class = get_team_class(badge_team_label)
         draft_team_class = get_team_class(draft_team)
 
-        # Contract
         contract_raw = str(row.get("Contract", "-")).strip()
         contract_display = "-"
         if contract_raw and contract_raw != "nan" and contract_raw != "-":
@@ -644,10 +625,8 @@ def generate_html_content(df):
         fa_year_raw = row.get("FA", "---")
         fa_year = str(int(float(fa_year_raw))) if str(fa_year_raw).replace('.','').isdigit() else str(fa_year_raw)
         
-        # ★修正: CURRENT_SEASON + 1 をFA年として判定
         is_expiring = "is-expiring" if fa_year == str(CURRENT_SEASON + 1) else ""
 
-        # Stats
         stats_li = ""
         for col in stats_cols:
             raw = row.get(col, "")
@@ -665,7 +644,6 @@ def generate_html_content(df):
             stats_li += f'<li class="info-line"><strong class="stats-category-label">{cat}:</strong><div class="value">{val_html}</div></li>'
         if not stats_li: stats_li = '<li class="info-line"><div class="value">No Stats</div></li>'
 
-        # Combine
         combine_raw = str(row.get("Combine", ""))
         combine_html = "-"
         if pd.notna(combine_raw) and combine_raw.strip():
@@ -682,22 +660,28 @@ def generate_html_content(df):
         notes = str(row.get("Notes", "")) if pd.notna(row.get("Notes")) else ""
         honors = str(row.get("Honors", "")) if pd.notna(row.get("Honors")) else ""
 
-        # Badges
         badge_new_block = ""
         badge_honor_block = ""
         card_extra_class = ""
         
-        # ★修正: CURRENT_SEASONと比較
         if join_year == str(CURRENT_SEASON):
             card_extra_class += " is-new"
             badge_new_block = '<div class="pop-badge-wrapper is-new"><span class="pop-badge badge-new">NEW</span></div>'
 
+        # ★修正: バッジ複数表示ロジック
         if "All-Pro" in honors:
             card_extra_class += " is-allpro"
-            badge_honor_block = '<div class="pop-badge-wrapper is-honor"><span class="pop-badge badge-honor">ALL-PRO</span></div>'
         elif "Pro Bowl" in honors:
             card_extra_class += " is-probowl"
-            badge_honor_block = '<div class="pop-badge-wrapper is-honor"><span class="pop-badge badge-honor">PRO BOWL</span></div>'
+
+        honor_spans = ""
+        if "All-Pro" in honors:
+            honor_spans += '<span class="pop-badge badge-honor">ALL-PRO</span>'
+        if "Pro Bowl" in honors:
+            honor_spans += '<span class="pop-badge badge-honor">PRO BOWL</span>'
+        
+        if honor_spans:
+            badge_honor_block = f'<div class="pop-badge-wrapper is-honor">{honor_spans}</div>'
 
         draft_round = row.get("Draft Round")
         draft_year_val = ""
@@ -801,12 +785,10 @@ def generate_html_content(df):
     return "\n".join(html_lines)
 
 def update_hatena_blog(content_body):
-    """生成したHTMLではてなブログの記事を更新する"""
     if not TARGET_ENTRY_ID:
         print("[ERROR] TARGET_ENTRY_ID is missing.", file=sys.stderr)
         return
 
-    # エンドポイント: 固定ページ用 (/atom/page/)
     url = f'https://blog.hatena.ne.jp/{HATENA_ID}/{HATENA_BLOG_ID}/atom/page/{TARGET_ENTRY_ID}'
     
     print(f"Fetching current entry info from {url}...", file=sys.stderr)
@@ -825,7 +807,6 @@ def update_hatena_blog(content_body):
         print(f"[ERROR] Failed to get current entry: {e}", file=sys.stderr)
         return
 
-    # XML構築（HTMLエスケープ）
     escaped_body = html.escape(content_body)
     escaped_title = html.escape(title)
     categories_xml = "\n".join([f'<category term="{html.escape(c)}" />' for c in categories])
