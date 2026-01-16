@@ -812,7 +812,7 @@ def update_hatena_blog(content_body):
         print("[ERROR] TARGET_ENTRY_ID is missing.", file=sys.stderr)
         return
 
-    url = f'https://blog.hatena.ne.jp/{HATENA_ID}/{HATENA_BLOG_ID}/atom/entry/{TARGET_ENTRY_ID}'
+    url = f'https://blog.hatena.ne.jp/{HATENA_ID}/{HATENA_BLOG_ID}/atom/page/{TARGET_ENTRY_ID}'
     
     print(f"Fetching current entry info from {url}...", file=sys.stderr)
     try:
