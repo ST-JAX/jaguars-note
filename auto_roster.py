@@ -7,6 +7,15 @@ import requests
 from requests.auth import HTTPBasicAuth
 
 # ==============================================================================
+# 0. SEASON SETTINGS (シーズンが変わったらここを変更してください)
+# ==============================================================================
+# Statsカラムの検索に使う年 (例: Stats -Passing- (2024) なら "2024")
+STATS_YEAR = "2024"
+
+# Leave判定に使う年 (この年を含む、または空欄の選手を表示)
+LEAVE_FILTER_YEAR = "2025"
+
+# ==============================================================================
 # 1. 設定・定数
 # ==============================================================================
 NOTION_API_KEY = os.environ.get('NOTION_TOKEN') 
@@ -32,7 +41,7 @@ POSITION_IMAGES = {
     "K": "https://cdn-ak.f.st-hatena.com/images/fotolife/S/StaiL21/20251214/20251214042502.png",
     "P": "https://cdn-ak.f.st-hatena.com/images/fotolife/S/StaiL21/20251214/20251214042502.png",
     "LS": "https://cdn-ak.f.st-hatena.com/images/fotolife/S/StaiL21/20251214/20251214042043.png",
-    "RS": "https://cdn-ak.f.st-hatena.com/images/fotolife/S/StaiL21/20251214/20251214042043.png", # RS追加(LSと同じ仮画像)
+    "RS": "https://cdn-ak.f.st-hatena.com/images/fotolife/S/StaiL21/20251214/20251214042043.png",
 }
 
 # Control Panel HTML
@@ -381,7 +390,7 @@ def get_property_value(page, prop_name):
     return ""
 
 def fetch_roster_data():
-    """Notionから全データを取得 (フィルタリングはPython側で行う)"""
+    """Notionから全データを取得"""
     notion = Client(auth=NOTION_API_KEY)
     results = []
     has_more = True
@@ -390,7 +399,7 @@ def fetch_roster_data():
     print("Fetching data from Notion...", file=sys.stderr)
 
     while has_more:
-        # DB全体を取得 (APIでの複雑なフィルタリングを避け、Pythonで確実に処理するため)
+        # DB全体を取得
         response = notion.databases.query(
             database_id=ROSTER_DB_ID,
             start_cursor=next_cursor
@@ -401,7 +410,7 @@ def fetch_roster_data():
 
     data_list = []
     for page in results:
-        # 全プロパティの取得
+        # プロパティ取得
         item = {
             "Name": get_property_value(page, "Name"),
             "#": get_property_value(page, "#"),
@@ -426,9 +435,10 @@ def fetch_roster_data():
             "Leave": get_property_value(page, "Leave")
         }
         
+        # Statsカラムの動的取得
         props = page.get("properties", {})
         for key in props.keys():
-            if key.startswith("Stats"):
+            if key.startswith(f"Stats -"): # Stats -General- (2024) etc
                 item[key] = get_property_value(page, key)
         
         if "Combine" in props:
@@ -489,8 +499,6 @@ def determine_status(row):
         "suspended": "susp", "ps": "ps", "eip": "eip",
         "left": "out", "active": "active",
     }
-    # マッピングになければ active とする（Exemptなどは active 扱い）
-    # ※もしExemptを別色にしたい場合はここで分岐を増やします
     return mapping.get(s, "active")
 
 # ★ソート用ランク付け関数 (ユーザー指定の順序)
@@ -530,14 +538,14 @@ def generate_html_content(df):
     df["Primary_Pos"] = df["Position"].apply(get_primary)
     df["Pos_Order"] = df["Primary_Pos"].map(position_order)
     
-    # ★フィルターロジック: Leaveが未入力あるいは2025に一致
-    # Pandasでフィルタリングを実行
+    # ★フィルターロジック: Leaveが未入力あるいは指定年(LEAVE_FILTER_YEAR)を含む
     def should_keep(row):
         leave_val = str(row["Leave"]).strip()
-        # 未入力(nan, "", "nan") または "2025" を含む場合は残す
+        # 未入力(nan, "", "nan") 
         if not leave_val or leave_val.lower() == "nan":
             return True
-        if "2025" in leave_val:
+        # 指定年を含む場合
+        if LEAVE_FILTER_YEAR in leave_val:
             return True
         return False
 
@@ -549,7 +557,10 @@ def generate_html_content(df):
     # ★ソート実行: Status(昇順) -> Position(昇順) -> #(昇順)
     df = df.sort_values(by=["Status_Rank", "Pos_Order", "#"], ascending=[True, True, True])
 
-    stats_cols = [c for c in df.columns if c.startswith("Stats -") and "(2024)" in c]
+    # 指定年のSTATSカラムのみ抽出
+    target_stats_str = f"({STATS_YEAR})"
+    stats_cols = [c for c in df.columns if c.startswith("Stats -") and target_stats_str in c]
+    
     current_year = datetime.now().year
 
     # --- HTML組み立て ---
@@ -614,7 +625,8 @@ def generate_html_content(df):
         for col in stats_cols:
             raw = row.get(col, "")
             if pd.isna(raw) or not str(raw).strip(): continue
-            cat = col.replace("Stats -", "").replace("(2024)", "").strip("- ")
+            # "Stats -Passing- (2024)" -> "Passing"
+            cat = col.replace("Stats -", "").replace(target_stats_str, "").strip("- ")
             items = str(raw).split(" / ")
             fmt_items = []
             for item in items:
@@ -730,7 +742,7 @@ def generate_html_content(df):
             </div>
             
             <div class="stats-container">
-              <div class="stats-header">STATS (2024)</div>
+              <div class="stats-header">STATS ({STATS_YEAR})</div>
               <ul>{stats_li}</ul>
             </div>
 
