@@ -1,11 +1,10 @@
-name: Update Jaguars Schedule
+name: Update Jaguars Note Content
 
 on:
   schedule:
-    # 毎日 6時間おきに自動実行する設定（UTC時間なので注意）
+    # 毎日 6時間おきに自動実行 (UTC時間)
     - cron: '0 */6 * * *'
   workflow_dispatch:
-    # GitHubの画面から手動で「今すぐ更新」ボタンを押せるようにする設定
 
 jobs:
   update-blog:
@@ -23,14 +22,15 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pandas requests openpyxl
+          # notion-client を追加
+          pip install pandas requests openpyxl notion-client
 
-      - name: Run update script
-        # ここで金庫(Secrets)の中身をPythonに渡すよ
+      - name: Run update scripts
         env:
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           NOTION_SCHEDULE_DB_ID: ${{ secrets.NOTION_SCHEDULE_DB_ID }}
           NOTION_NEWS_DB_ID: ${{ secrets.NOTION_NEWS_DB_ID }}
+          NOTION_ROSTER_DB_ID: ${{ secrets.NOTION_ROSTER_DB_ID }} # 追加
           HATENA_USER: ${{ secrets.HATENA_USER }}
           HATENA_BLOG: ${{ secrets.HATENA_BLOG }}
           HATENA_API_KEY: ${{ secrets.HATENA_API_KEY }}
@@ -38,6 +38,8 @@ jobs:
           HATENA_NEWS_PAGE_ID: ${{ secrets.HATENA_NEWS_PAGE_ID }}
           HATENA_LATEST_NEWS_PAGE_ID: ${{ secrets.HATENA_LATEST_NEWS_PAGE_ID }}
           HATENA_LATEST_SCHEDULE_PAGE_ID: ${{ secrets.HATENA_LATEST_SCHEDULE_PAGE_ID }}
+          HATENA_LATEST_ROSTER_PAGE_ID: ${{ secrets.HATENA_LATEST_ROSTER_PAGE_ID }} # 追加
         run: |
           python auto_schedule.py
           python auto_news.py
+          python update_roster.py
