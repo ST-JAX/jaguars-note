@@ -9,7 +9,13 @@ import unicodedata
 from xml.sax.saxutils import escape
 
 # ==========================================
-# 1. 設定情報（ここを自分の情報に書き換えて！）
+# 0. SEASON SETTINGS (シーズンが変わったらここを変更)
+# ==========================================
+# ★表示したいシーズンを指定 (Notionの "Season" プロパティ(数値)と一致させる)
+CURRENT_SEASON = 2025
+
+# ==========================================
+# 1. 設定情報
 # ==========================================
 NOTION_TOKEN = os.getenv("NOTION_TOKEN")
 NOTION_SCHEDULE_DB_ID = os.getenv("NOTION_SCHEDULE_DB_ID")
@@ -17,7 +23,6 @@ HATENA_USER = os.getenv("HATENA_USER")
 HATENA_BLOG = os.getenv("HATENA_BLOG")
 HATENA_API_KEY = os.getenv("HATENA_API_KEY")
 HATENA_SCHEDULE_PAGE_ID = os.getenv("HATENA_SCHEDULE_PAGE_ID")
-# 【追加箇所】
 HATENA_LATEST_SCHEDULE_PAGE_ID = os.getenv("HATENA_LATEST_SCHEDULE_PAGE_ID")
 
 # パス設定
@@ -63,9 +68,8 @@ JAX_CONF, JAX_DIV = "AFC", "South"
 POSTSEASON_WEEKS = ["WC", "DIV", "CONF", "SB"]
 
 # ==========================================
-# 2. ロジック関数群（元のコードを完全に維持）
+# 2. ロジック関数群
 # ==========================================
-
 
 def _count_record_schedule(df, win_col="win"):
     if df.empty or win_col not in df.columns:
@@ -181,7 +185,7 @@ def build_mobile_table(df):
 
 
 # ==========================================
-# 2.5 新設ロジック：ヘッダー専用Snippetの生成
+# 2.5 ヘッダー専用Snippetの生成
 # ==========================================
 
 def build_header_snippet_data(df):
@@ -262,7 +266,25 @@ def fetch_from_notion():
         "Notion-Version": "2022-06-28",
         "Content-Type": "application/json",
     }
-    res = requests.post(url, headers=headers, json={})
+    
+    # ★変更点: CURRENT_SEASON と一致する Season プロパティのデータのみ取得
+    payload = {
+        "filter": {
+            "property": "Season",
+            "number": {
+                "equals": CURRENT_SEASON
+            }
+        },
+        # Sort No での並び替えもAPI側で行っておくと確実
+        "sorts": [
+            {
+                "property": "Sort No",
+                "direction": "ascending"
+            }
+        ]
+    }
+    
+    res = requests.post(url, headers=headers, json=payload)
     res.raise_for_status()
     rows = []
     for page in res.json()["results"]:
@@ -299,11 +321,17 @@ def update_hatena(page_id, title, content):
 
 def main():
     try:
-        print("🏈 Notionからデータを取得中...")
+        print(f"🏈 Notionから {CURRENT_SEASON} シーズンのデータを取得中...")
         df = fetch_from_notion()
+        
+        # データがない場合のガード処理
+        if df.empty:
+            print("データが見つかりませんでした。Seasonプロパティを確認してください。")
+            return
+
         colors_df = pd.read_excel(color_path)
 
-        # 1. 【重要】Sort No で並び替え
+        # 1. Sort No で並び替え (念のためPython側でも)
         df = df.sort_values("sort_no").reset_index(drop=True)
 
         # 2. 日時整形
@@ -345,7 +373,7 @@ def main():
         df["date"] = df["datetime"].dt.strftime("%Y/%m/%d")
         df["time"] = df["datetime"].dt.strftime("%H:%M")
 
-        # HTML組み立て（元のロジックそのまま）
+        # HTML組み立て
         full_html = build_schedule_record_bar(df)
         pre_df = df[df["week"].astype(str).str.startswith("Pre")]
         reg_df = df[~df["week"].astype(str).str.startswith("Pre") & ~df["week"].isin(POSTSEASON_WEEKS)]
@@ -367,7 +395,7 @@ def main():
                 continue
             full_html += f'<div class="tab-content" id="{tid}" style="display:none;">{build_pc_table(d)}{build_mobile_table(d)}</div>'
 
-        # 魂のJavaScript
+        # JavaScript
         full_html += """
 <script>
 document.addEventListener("DOMContentLoaded", function () {
@@ -423,8 +451,8 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 </script>"""
 
-        # メイン更新
-        update_hatena(HATENA_SCHEDULE_PAGE_ID, "2025 Game Schedule", full_html)
+        # メイン更新 (ページタイトルも自動で年度が入るように修正)
+        update_hatena(HATENA_SCHEDULE_PAGE_ID, f"{CURRENT_SEASON} Game Schedule", full_html)
 
         # ヘッダー用Snippet更新
         if HATENA_LATEST_SCHEDULE_PAGE_ID:
