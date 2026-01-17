@@ -1,294 +1,265 @@
-<!--前のページ-->
-
-<script type="text/javascript">
-    // 現在のページが記事一覧の2ページ目以降の場合処理実行
-    if (location.search.indexOf("?page=") === 0) {
-        // aタグの作成
-        var a = document.createElement('a');
-        a.addEventListener("click", function(){history.back();}); // クリックすると一つ前の履歴に戻る処理を追加
-        a.innerHTML = "前のページ"
-        a.setAttribute("href", "javascript:void(0);");
-        a.setAttribute("rel", "prev"); // seo対策
-        // spanタグの作成（中に作成したaタグを入れる）
-        var span = document.createElement('span');
-        span.classList.add('pager-prev');
-        span.appendChild(a);
-        // classがpagerのdivタグに上記で作成したものを挿入する（classがpager-nextのspanタグよりも前に挿入する）
-        var element = document.getElementsByClassName("pager")[0];
-        element.insertBefore(span, element.firstChild);
-    }
-</script>
-
-<!--スマホ検索バー-->
 <script>
-function toggleSearchBar() {
-  const bar = document.getElementById('mobileSearchBar');
-  const input = bar.querySelector('input[type="text"]');
-  
-  if (bar.classList.contains('active')) {
-    bar.classList.remove('active');
-  } else {
-    bar.classList.add('active');
-    setTimeout(() => {
-      input.focus();
-    }, 300); // 0.3秒待ってからフォーカス（CSSのスライドアニメに合わせる）
-  }
-}
-</script>
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-
-  // ====== 展開リスト開閉（player-toggle） ======
-  const toggles = document.querySelectorAll('.player-toggle');
-  toggles.forEach(function (toggle) {
-    const sub = toggle.querySelector('.player-sub');
-    toggle.addEventListener('click', function () {
-      if (sub.style.maxHeight) {
-        sub.style.maxHeight = null;
-        sub.style.opacity = 0;
-      } else {
-        sub.style.maxHeight = sub.scrollHeight + 'px';
-        sub.style.opacity = 1;
-      }
-    });
-  });
-
-  // ====== 凡例ボックス開閉（legend-box） ======
-const legends = document.querySelectorAll('.legend-box, .filter-toggle');
-
-legends.forEach(function (box) {
-  const header = box.querySelector('.legend-header');
-  const content = box.querySelector('.legend-content');
-
-  // 初期状態（閉じておく）
-  content.style.maxHeight = '0px';
-  content.style.opacity = '0';
-  content.style.marginBottom = '0';
-  content.style.transition = 'max-height 0.4s ease, opacity 0.4s ease, margin 0.4s ease';
-
-  const toggleLegend = () => {
-    const isOpen = box.getAttribute('aria-expanded') === 'true';
-    if (isOpen) {
-      content.style.maxHeight = '0px';
-      content.style.opacity = '0';
-      content.style.marginBottom = '0';
-      box.setAttribute('aria-expanded', 'false');
-    } else {
-      content.style.maxHeight = content.scrollHeight + 'px';
-      content.style.opacity = '1';
-      content.style.marginBottom = '0.5em';
-      box.setAttribute('aria-expanded', 'true');
-    }
-  };
-
-  header.addEventListener('click', function (e) {
-    e.preventDefault();
-    toggleLegend();
-  });
-
-  box.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      toggleLegend();
-    }
-  });
-});
-
-
-  // ====== 年齢とNFL年数の自動計算 ======
-  const today = new Date();
-  const ages = document.querySelectorAll('.player-age');
-  const years = document.querySelectorAll('.player-year');
-
-  ages.forEach(function (el) {
-    const birth = new Date(el.dataset.birthday);
-    let age = today.getFullYear() - birth.getFullYear();
-    const m = today.getMonth() - birth.getMonth();
-    const d = today.getDate() - birth.getDate();
-    if (m < 0 || (m === 0 && d < 0)) {
-      age--;
-    }
-    const months = (today.getMonth() + (today.getDate() >= birth.getDate() ? 0 : -1) - birth.getMonth() + 12) % 12;
-    const decimalAge = (age + months / 12).toFixed(1);
-    const parts = decimalAge.split('.');
-    el.innerHTML = parts[0] + '<span style="font-size: 80%;">.' + parts[1] + '</span>歳';
-  });
-
-  years.forEach(function (el) {
-    const entryYear = parseInt(el.dataset.entry, 10);
-    const exp = today.getFullYear() - entryYear;
-
-    if (exp === 0) {
-      el.innerHTML = '(R)'; // ルーキーの場合
-    } else {
-      el.innerHTML = `(${exp})`; // 経験年数
-    }
-  });
-
-});
-
-// =========スクロールスコア==========
-
-  document.addEventListener("DOMContentLoaded", function() {
-    const topButton = document.getElementById("scroll-top-button");
-    if (topButton) {
-      topButton.addEventListener("click", function () {
-        window.scrollTo({
-          top: 0,
-          behavior: "smooth"
-        });
-      });
-    }
-  });
-  
-  document.addEventListener("DOMContentLoaded", function () {
-  const slides = document.querySelectorAll(".schedule-slide");
-  const carousel = document.querySelector(".schedule-carousel");
-  let index = 0;
-  let minDiff = Infinity;
-
-  const today = new Date();
-
-  slides.forEach((slide, i) => {
-    const dateStr = slide.dataset.date;
-    const date = new Date(dateStr);
-    const diff = Math.abs(date - today);
-
-    if (diff < minDiff) {
-      minDiff = diff;
-      index = i;
-    }
-  });
-
-    function updateSlide() {
-      const slideWidth = 200; // ← 固定値として指定
-      const containerWidth = document.querySelector(".schedule-carousel-viewport").offsetWidth;
-      const offset = -index * slideWidth + (containerWidth - slideWidth) / 2;
-      document.querySelector(".schedule-carousel").style.transform = `translateX(${offset}px)`;
-    }
-
-  document.querySelector(".schedule-prev").addEventListener("click", () => {
-    index = (index - 1 + slides.length) % slides.length;
-    updateSlide();
-  });
-
-  document.querySelector(".schedule-next").addEventListener("click", () => {
-    index = (index + 1) % slides.length;
-    updateSlide();
-  });
-
-// スワイプ用変数
-let touchStartX = 0;
-let touchEndX = 0;
-
-const viewport = document.querySelector(".schedule-carousel-viewport");
-
-viewport.addEventListener("touchstart", (e) => {
-  touchStartX = e.changedTouches[0].screenX;
-});
-
-viewport.addEventListener("touchend", (e) => {
-  touchEndX = e.changedTouches[0].screenX;
-  handleSwipe();
-});
-
-function handleSwipe() {
-  const threshold = 30; // スワイプ判定の最小距離
-
-  if (touchEndX < touchStartX - threshold) {
-    index = (index + 1) % slides.length;
-    updateSlide();
-  } else if (touchEndX > touchStartX + threshold) {
-    index = (index - 1 + slides.length) % slides.length;
-    updateSlide();
-  }
-}
-
-
-  setTimeout(updateSlide, 50);
-});
-
-// =========newsバー==========
-
-  document.addEventListener("DOMContentLoaded", function () {
-    const viewport = document.querySelector(".newsbar-b-viewport");
-    const list = document.querySelector(".js-newsbar-b-list");
-    if (!viewport || !list) return;
-
-    // 元のHTMLを保存して、2回並べる（ニュース＋See More全部）
-    const originalHTML = list.innerHTML;
-    list.innerHTML = originalHTML + originalHTML;
-
-    // 1セット分の幅（複製後の全体幅の半分）
-    const originalWidth = list.scrollWidth / 2;
-
-    // ★ ここが前に動いていた形：位置は x で管理
-    let x = 0;
-    const speed = 0.4; // 好みで 0.3〜0.6 あたりに調整
-
-    let userInteracting = false;
-    let resumeTimer = null;
-
-    function animate() {
-      if (!userInteracting) {
-        x += speed;
-
-        if (x >= originalWidth) {
-          x -= originalWidth;
+// ==========================================
+// 1. 全てのクリックイベントを一括管理（イベント委譲）
+// ==========================================
+document.addEventListener('click', function (e) {
+    // A. メインヘッダー全体の開閉（トグルボタン）
+    const headerToggle = e.target.closest('#header-toggle-btn');
+    if (headerToggle) {
+        const wrapper = document.getElementById('score-wrapper');
+        if (wrapper) {
+            const isCollapsed = wrapper.classList.toggle('is-collapsed');
+            localStorage.setItem('headerCollapsed', isCollapsed);
+            adjustBodyPadding();
         }
-
-        viewport.scrollLeft = x;
-      }
-      requestAnimationFrame(animate);
+        return;
     }
 
-    animate();
-
-    function startInteraction() {
-      userInteracting = true;
-      if (resumeTimer) {
-        clearTimeout(resumeTimer);
-        resumeTimer = null;
-      }
+    // B. ロースター（選手名鑑）の開閉
+    const playerToggle = e.target.closest('.player-toggle');
+    if (playerToggle) {
+        const sub = playerToggle.querySelector('.player-sub');
+        if (sub) {
+            const isOpen = sub.style.maxHeight;
+            sub.style.maxHeight = isOpen ? null : sub.scrollHeight + 'px';
+            sub.style.opacity = isOpen ? '0' : '1';
+        }
+        return;
     }
 
-    function endInteraction() {
-      if (resumeTimer) {
-        clearTimeout(resumeTimer);
-      }
-      // 触るのをやめて 1.5秒後に自動スクロール再開
-      resumeTimer = setTimeout(function () {
-    // ★ユーザーが止めた位置を現在位置として採用する
-        x = viewport.scrollLeft;
-        userInteracting = false;
-      }, 1500);
+    // C. 凡例ボックス/フィルターの開閉
+    const legendHeader = e.target.closest('.legend-header');
+    if (legendHeader) {
+        e.preventDefault();
+        const box = legendHeader.closest('.legend-box, .filter-toggle');
+        const content = box ? box.querySelector('.legend-content') : null;
+        if (box && content) {
+            const isOpen = box.getAttribute('aria-expanded') === 'true';
+            content.style.maxHeight = isOpen ? '0px' : content.scrollHeight + 'px';
+            content.style.opacity = isOpen ? '0' : '1';
+            box.setAttribute('aria-expanded', !isOpen);
+        }
+        return;
     }
 
+    // D. 戦績バーの開閉（リアルタイム同期版）
+    const recordBtn = e.target.closest('.jax-record-main');
+    if (recordBtn) {
+        const recordBar = document.getElementById('jax-record-bar');
+        if (recordBar) {
+            const isOpen = recordBar.classList.toggle('is-open');
+            recordBtn.setAttribute('aria-expanded', isOpen);
+            let start = null;
+            function sync(t) {
+                if (!start) start = t;
+                adjustBodyPadding(); 
+                if (t - start < 350) requestAnimationFrame(sync);
+            }
+            requestAnimationFrame(sync);
+        }
+        return;
+    }
 
-    // PC: スクロールし始めたら一時停止 → マウス離してちょっとしたら再開
-    viewport.addEventListener("wheel", startInteraction, { passive: true });
-    viewport.addEventListener("mouseleave", endInteraction, { passive: true });
-
-    // スマホ: スワイプ中は一時停止、終わったら少しして再開
-    viewport.addEventListener("touchstart", startInteraction, { passive: true });
-    viewport.addEventListener("touchend", endInteraction, { passive: true });
-    viewport.addEventListener("touchcancel", endInteraction, { passive: true });
-  });
-
-// ======戦績展開====== //
-document.addEventListener("DOMContentLoaded", function () {
-  const bar = document.getElementById("jax-record-bar");
-  if (!bar) return;
-
-  const btn = bar.querySelector(".jax-record-main");
-  const details = bar.querySelector(".jax-record-details");
-  if (!btn || !details) return;
-
-  btn.addEventListener("click", function () {
-    const isOpen = bar.classList.toggle("is-open");
-    btn.setAttribute("aria-expanded", isOpen ? "true" : "false");
-  });
+    // E. トップへ戻るボタン
+    const topBtn = e.target.closest('#scroll-top-button');
+    if (topBtn) {
+        e.preventDefault();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        return;
+    }
 });
+
+// ==========================================
+// 2. ページ読み込み時の初期化
+// ==========================================
+document.addEventListener('DOMContentLoaded', function () {
+    const wrapper = document.getElementById('score-wrapper');
+    
+    // --- 記憶に基づいたヘッダー状態の復元 ---
+    const headerState = localStorage.getItem('headerCollapsed');
+    if (wrapper && headerState === 'true') {
+        wrapper.classList.add('is-collapsed');
+    }
+
+    // --- 年齢・NFLキャリア年数計算 ---
+    const today = new Date();
+    document.querySelectorAll('.player-age').forEach(el => {
+        const birth = new Date(el.dataset.birthday);
+        let age = today.getFullYear() - birth.getFullYear();
+        if (today.getMonth() < birth.getMonth() || (today.getMonth() === birth.getMonth() && today.getDate() < birth.getDate())) age--;
+        const m = (today.getMonth() - birth.getMonth() + 12) % 12;
+        el.innerHTML = `${age}<span style="font-size: 80%;">.${m}</span>歳`;
+    });
+    document.querySelectorAll('.player-year').forEach(el => {
+        const entryYear = parseInt(el.dataset.entry, 10);
+        const exp = today.getFullYear() - entryYear;
+        el.innerHTML = (exp === 0) ? '(R)' : `(${exp})`;
+    });
+
+    // --- 前のページボタン ---
+    const pager = document.querySelector(".pager");
+    if (pager && location.search.indexOf("?page=") === 0) {
+        const a = document.createElement('a');
+        a.onclick = () => history.back();
+        a.innerHTML = "前のページ";
+        a.setAttribute("href", "javascript:void(0);");
+        const span = document.createElement('span');
+        span.className = 'pager-prev';
+        span.appendChild(a);
+        pager.insertBefore(span, pager.firstChild);
+    }
+
+    // --- データ読み込み開始 ---
+    fetchJAXHeaderData();
+    adjustBodyPadding();
+});
+
+// ==========================================
+// 3. システム関数（取得・制御）
+// ==========================================
+
+// ヘッダーデータの取得
+function fetchJAXHeaderData() {
+    // スコア・戦績
+    fetch('/schedule-latest').then(res => res.text()).then(html => {
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        const source = doc.querySelector('.entry-content') || doc.querySelector('.page-entry-content');
+        if (source) {
+            const newScore = source.querySelector('#score-bar');
+            const newRecord = source.querySelector('#jax-record-bar');
+            if (newScore) document.getElementById('score-bar').innerHTML = newScore.innerHTML;
+            if (newRecord) document.getElementById('jax-record-bar').innerHTML = newRecord.innerHTML;
+            setTimeout(initCarouselLogic, 10);
+        }
+    });
+
+    // ニュース（See More含む）
+    fetch('/news-latest').then(res => res.text()).then(html => {
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        const items = doc.querySelectorAll('.news-item');
+        const list = document.getElementById('dynamic-news-bar');
+        if (items.length > 0 && list) {
+            let h = "";
+            items.forEach(item => {
+                const date = item.querySelector(".news-item-date").textContent.split("/").slice(1).join("/");
+                const typeClass = item.dataset.type;
+                const typeText = item.querySelector(".news-item-type").textContent;
+                const title = item.querySelector(".news-item-title");
+                h += `<li class="newsbar-b-item"><span class="newsbar-b-date">${date}</span><span class="newsbar-b-type newsbar-b-type--${typeClass}">${typeText}</span><a href="${title.href}" class="newsbar-b-title">${title.textContent}</a></li>`;
+            });
+            h += `<li class="newsbar-b-item"><a href="/news" class="newsbar-b-more-link">See More</a></li>`;
+            list.innerHTML = h + h;
+            startNewsScroll();
+        }
+    });
+}
+
+// カルーセル制御
+function initCarouselLogic() {
+    const vn = document.querySelector(".schedule-carousel-viewport");
+    const carousel = document.querySelector(".schedule-carousel");
+    const slides = document.querySelectorAll(".schedule-slide");
+    if (!carousel || slides.length === 0) return;
+
+    let index = 0;
+    let minDiff = Infinity;
+    const now = new Date();
+    slides.forEach((slide, i) => {
+        const dateStr = slide.dataset.date;
+        if (dateStr) {
+            const date = new Date(dateStr);
+            const diff = Math.abs(date - now);
+            if (diff < minDiff) { minDiff = diff; index = i; }
+        }
+    });
+
+    const update = () => {
+        const sw = 200; 
+        const offset = -index * sw + (vn.offsetWidth - sw) / 2;
+        carousel.style.transition = "transform 0.3s ease-out";
+        carousel.style.transform = `translateX(${offset}px)`;
+    };
+
+    const prev = document.querySelector(".schedule-prev");
+    const next = document.querySelector(".schedule-next");
+    if (prev) prev.onclick = () => { index = (index - 1 + slides.length) % slides.length; update(); };
+    if (next) next.onclick = () => { index = (index + 1) % slides.length; update(); };
+
+    let startX = 0;
+    vn.addEventListener("touchstart", e => { startX = e.changedTouches[0].screenX; }, {passive: true});
+    vn.addEventListener("touchend", e => {
+        const endX = e.changedTouches[0].screenX;
+        if (endX < startX - 30) { index = (index + 1) % slides.length; update(); }
+        else if (endX > startX + 30) { index = (index - 1 + slides.length) % slides.length; update(); }
+    }, {passive: true});
+
+    update();
+    window.addEventListener('resize', update);
+}
+
+// ニューススクロール
+function startNewsScroll() {
+    const vn = document.querySelector(".newsbar-b-viewport");
+    const ln = document.querySelector(".js-newsbar-b-list");
+    if (!vn || !ln) return;
+    const originalWidth = ln.scrollWidth / 2;
+    let x = vn.scrollLeft;
+    let interacting = false;
+    let timer = null;
+
+    const animate = () => {
+        if (!interacting) {
+            x += 0.5;
+            if (x >= originalWidth) x -= originalWidth;
+            vn.scrollLeft = x;
+        }
+        requestAnimationFrame(animate);
+    };
+
+    const stop = () => { interacting = true; if (timer) clearTimeout(timer); };
+    const start = () => { timer = setTimeout(() => { x = vn.scrollLeft; interacting = false; }, 1500); };
+
+    vn.addEventListener("touchstart", stop, { passive: true });
+    vn.addEventListener("touchmove", stop, { passive: true });
+    vn.addEventListener("touchend", start, { passive: true });
+    vn.addEventListener("mouseenter", stop);
+    vn.addEventListener("mouseleave", start);
+    animate();
+}
+
+// 高さを測ってページ全体の余白を調整する関数
+function adjustBodyPadding() {
+    const wrapper = document.getElementById('score-wrapper');
+    if (!wrapper) return;
+
+    // 透過の判定（at-topクラス）
+    wrapper.classList.toggle('at-top', window.scrollY < 10);
+
+    let heightValue = 0;
+
+    // 1. 閉じている場合は 0
+    if (wrapper.classList.contains('is-collapsed')) {
+        heightValue = 0;
+    } 
+    // 2. 開いている場合
+    else {
+        const scoreBar = document.getElementById('score-bar');
+        // fetch前は、CSSの予約席(155/140)を維持
+        if (scoreBar && scoreBar.innerHTML.trim() === "") {
+            const isMobile = window.innerWidth <= 768;
+            heightValue = isMobile ? 140 : 155;
+        } else {
+            // データがあるなら実測値を採用
+            heightValue = wrapper.offsetHeight;
+        }
+    }
+
+    // CSS変数だけを更新
+    document.documentElement.style.setProperty('--header-height', heightValue + 'px');
+}
+
+// イベント監視
+window.addEventListener('resize', adjustBodyPadding);
+window.addEventListener('scroll', adjustBodyPadding);
 
 </script>
