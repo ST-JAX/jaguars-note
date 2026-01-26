@@ -3,6 +3,20 @@
 // 1. 全てのクリックイベントを一括管理（イベント委譲）
 // ==========================================
 document.addEventListener('click', function (e) {
+    
+    // --- [追加] ファントムメニュー（右上のボタン）の開閉 ---
+    const menuTrigger = e.target.closest('#mobile-menu-trigger');
+    if (menuTrigger) {
+        const overlay = document.getElementById('mobile-menu-overlay');
+        const body = document.body;
+        if (overlay) {
+            menuTrigger.classList.toggle('active');
+            overlay.classList.toggle('active');
+            body.classList.toggle('menu-open');
+        }
+        return;
+    }
+
     // A. メインヘッダー全体の開閉（トグルボタン）
     const headerToggle = e.target.closest('#header-toggle-btn');
     if (headerToggle) {
@@ -85,6 +99,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const today = new Date();
     document.querySelectorAll('.player-age').forEach(el => {
         const birth = new Date(el.dataset.birthday);
+        if(isNaN(birth)) return; // エラー回避
         let age = today.getFullYear() - birth.getFullYear();
         if (today.getMonth() < birth.getMonth() || (today.getMonth() === birth.getMonth() && today.getDate() < birth.getDate())) age--;
         const m = (today.getMonth() - birth.getMonth() + 12) % 12;
@@ -92,6 +107,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
     document.querySelectorAll('.player-year').forEach(el => {
         const entryYear = parseInt(el.dataset.entry, 10);
+        if(isNaN(entryYear)) return; // エラー回避
         const exp = today.getFullYear() - entryYear;
         el.innerHTML = (exp === 0) ? '(R)' : `(${exp})`;
     });
@@ -118,6 +134,24 @@ document.addEventListener('DOMContentLoaded', function () {
 // 3. システム関数（取得・制御）
 // ==========================================
 
+// [追加] スマホ検索バーの開閉（HTML内のonclickから呼ばれる）
+function toggleSearchBar() {
+  const bar = document.getElementById('mobileSearchBar');
+  if (!bar) return; 
+  
+  const input = bar.querySelector('input[type="text"]');
+  
+  if (bar.classList.contains('active')) {
+    bar.classList.remove('active');
+    if (input) input.blur(); 
+  } else {
+    bar.classList.add('active');
+    setTimeout(() => {
+      if (input) input.focus();
+    }, 300); 
+  }
+}
+
 // ヘッダーデータの取得
 function fetchJAXHeaderData() {
     // スコア・戦績
@@ -131,7 +165,7 @@ function fetchJAXHeaderData() {
             if (newRecord) document.getElementById('jax-record-bar').innerHTML = newRecord.innerHTML;
             setTimeout(initCarouselLogic, 10);
         }
-    });
+    }).catch(err => console.log('Header data fetch error', err)); // エラーハンドリング追加
 
     // ニュース（See More含む）
     fetch('/news-latest').then(res => res.text()).then(html => {
@@ -141,17 +175,24 @@ function fetchJAXHeaderData() {
         if (items.length > 0 && list) {
             let h = "";
             items.forEach(item => {
-                const date = item.querySelector(".news-item-date").textContent.split("/").slice(1).join("/");
-                const typeClass = item.dataset.type;
-                const typeText = item.querySelector(".news-item-type").textContent;
-                const title = item.querySelector(".news-item-title");
-                h += `<li class="newsbar-b-item"><span class="newsbar-b-date">${date}</span><span class="newsbar-b-type newsbar-b-type--${typeClass}">${typeText}</span><a href="${title.href}" class="newsbar-b-title">${title.textContent}</a></li>`;
+                const dateEl = item.querySelector(".news-item-date");
+                const typeEl = item.querySelector(".news-item-type");
+                const titleEl = item.querySelector(".news-item-title");
+                
+                if(dateEl && typeEl && titleEl) {
+                    const date = dateEl.textContent.split("/").slice(1).join("/");
+                    const typeClass = item.dataset.type;
+                    const typeText = typeEl.textContent;
+                    const title = titleEl.textContent;
+                    const href = titleEl.href;
+                    h += `<li class="newsbar-b-item"><span class="newsbar-b-date">${date}</span><span class="newsbar-b-type newsbar-b-type--${typeClass}">${typeText}</span><a href="${href}" class="newsbar-b-title">${title}</a></li>`;
+                }
             });
             h += `<li class="newsbar-b-item"><a href="/news" class="newsbar-b-more-link">See More</a></li>`;
             list.innerHTML = h + h;
             startNewsScroll();
         }
-    });
+    }).catch(err => console.log('News fetch error', err));
 }
 
 // カルーセル制御
@@ -186,12 +227,14 @@ function initCarouselLogic() {
     if (next) next.onclick = () => { index = (index + 1) % slides.length; update(); };
 
     let startX = 0;
-    vn.addEventListener("touchstart", e => { startX = e.changedTouches[0].screenX; }, {passive: true});
-    vn.addEventListener("touchend", e => {
-        const endX = e.changedTouches[0].screenX;
-        if (endX < startX - 30) { index = (index + 1) % slides.length; update(); }
-        else if (endX > startX + 30) { index = (index - 1 + slides.length) % slides.length; update(); }
-    }, {passive: true});
+    if(vn) {
+        vn.addEventListener("touchstart", e => { startX = e.changedTouches[0].screenX; }, {passive: true});
+        vn.addEventListener("touchend", e => {
+            const endX = e.changedTouches[0].screenX;
+            if (endX < startX - 30) { index = (index + 1) % slides.length; update(); }
+            else if (endX > startX + 30) { index = (index - 1 + slides.length) % slides.length; update(); }
+        }, {passive: true});
+    }
 
     update();
     window.addEventListener('resize', update);
@@ -244,7 +287,7 @@ function adjustBodyPadding() {
     // 2. 開いている場合
     else {
         const scoreBar = document.getElementById('score-bar');
-        // fetch前は、CSSの予約席(155/140)を維持
+        // fetch前は、CSSの予約席を維持
         if (scoreBar && scoreBar.innerHTML.trim() === "") {
             const isMobile = window.innerWidth <= 768;
             heightValue = isMobile ? 140 : 155;
@@ -261,5 +304,4 @@ function adjustBodyPadding() {
 // イベント監視
 window.addEventListener('resize', adjustBodyPadding);
 window.addEventListener('scroll', adjustBodyPadding);
-
 </script>
