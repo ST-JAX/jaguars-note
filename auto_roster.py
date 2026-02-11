@@ -14,6 +14,10 @@ CURRENT_SEASON = 2025
 STATS_YEAR = str(CURRENT_SEASON - 1)
 LEAVE_FILTER_YEAR = str(CURRENT_SEASON)
 
+# リーグ切り替え設定 (3月11日)
+LEAGUE_START_MONTH = 3
+LEAGUE_START_DAY = 11
+
 # ==============================================================================
 # 1. 設定・定数
 # ==============================================================================
@@ -86,7 +90,7 @@ CONTROL_PANEL_HTML = """
               <span class="status-ribbon">STATUS</span>
               <div class="player-toggle">
                 <div class="player-graphic-col">
-                   <img src="" class="player-silhouette pos-qb" style="transform: translateX(-5%);" loading="lazy">
+                    <img src="" class="player-silhouette pos-qb" style="transform: translateX(-5%);" loading="lazy">
                 </div>
                 <div class="player-content-col">
                   <div class="player-header">
@@ -96,21 +100,21 @@ CONTROL_PANEL_HTML = """
                       <div class="pop-badge-wrapper is-new"><span class="pop-badge badge-new">BADGE</span></div>
                     </div>
                     <div class="header-sub">
-                       <div class="acq-composite-badge">
-                         <span class="badge-method-part">STYLE</span>
-                         <span class="badge-team-part team-jax" style="background:#006778; color:#fff">TEAM</span>
-                       </div>
-                       <span class="meta-data">Exp Year / Age</span>
+                        <div class="acq-composite-badge">
+                          <span class="badge-method-part">STYLE</span>
+                          <span class="badge-team-part team-jax" style="background:#006778; color:#fff">TEAM</span>
+                        </div>
+                        <span class="meta-data">Exp Year / Age</span>
                     </div>
                   </div>
                   <div class="player-details-wrapper">
                     <div class="player-details-inner">
                       <div class="detail-grid">
-                         <div class="info-item"><span class="label">Ht/Wt:</span> Height / Weight</div>
-                         <div class="info-item"><span class="label">College:</span> College Name</div>
-                         <div class="info-item" style="min-width: 100%;">
-                           <span class="label">Entry:</span> Year / Round / Pick
-                         </div>
+                          <div class="info-item"><span class="label">Ht/Wt:</span> Height / Weight</div>
+                          <div class="info-item"><span class="label">College:</span> College Name</div>
+                          <div class="info-item" style="min-width: 100%;">
+                            <span class="label">Entry:</span> Year / Round / Pick
+                          </div>
                       </div>
                       <div class="stats-container">
                         <div class="stats-header">STATS (2024)</div>
@@ -208,41 +212,18 @@ CONTROL_PANEL_HTML = """
   </div>
 """
 
+# ★JSの修正: 動的な計算ロジック（calcAge/calcExp）を削除してスリム化
 JS_CONTENT = """
 <p>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
   const cards = document.querySelectorAll('.player-card');
   const playerList = document.querySelector("#rosterList");
-  const today = new Date();
 
-  const calcAge = (birthStr) => {
-    if(!birthStr || birthStr === "nan") return "---";
-    const birth = new Date(birthStr);
-    let age = today.getFullYear() - birth.getFullYear();
-    const m = today.getMonth() - birth.getMonth();
-    const d = today.getDate() - birth.getDate();
-    if (m < 0 || (m === 0 && d < 0)) age--;
-    const monthDiff = (today.getMonth() + (today.getDate() >= birth.getDate() ? 0 : -1) - birth.getMonth() + 12) % 12;
-    const decimal = (age + monthDiff / 12).toFixed(1);
-    return `${decimal} Yrs`;
-  };
-
-  const calcExp = (entryYearStr) => {
-    if(!entryYearStr || entryYearStr === "0") return "-";
-    const entry = parseInt(entryYearStr, 10);
-    const currentYear = today.getFullYear();
-    const exp = currentYear - entry;
-    if (exp <= 0) return "Exp: R";
-    return `Exp: ${exp}`;
-  };
+  // ここにあった calcAge, calcExp は削除しました（Python側で焼き込むため）
 
   cards.forEach(card => {
-    const metaAge = card.querySelector('.meta-age');
-    const metaExp = card.querySelector('.meta-exp');
-    if(metaAge && metaAge.dataset.birth) metaAge.innerHTML = calcAge(metaAge.dataset.birth);
-    if(metaExp && metaExp.dataset.entry) metaExp.innerHTML = calcExp(metaExp.dataset.entry);
-
+    // 開閉機能のみ残す
     const toggle = card.querySelector('.player-toggle');
     if (toggle) {
       toggle.addEventListener('click', () => {
@@ -270,7 +251,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const posPriority = { 
     QB:0, RB:1, WR:2, TE:3, OL:4, DL:5, EDGE:6, LB:7, CB:8, S:9, K:10, P:11, LS:12, RS:13, UNK:99 
   };
-  
+   
   const statusPriority = { active: 0, ir: 1, pup: 2, nfi: 3, ps: 4, susp: 5, eip: 6, out: 99 };
 
   const doFilterAndSort = () => {
@@ -359,7 +340,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
   }
-  
+   
   doFilterAndSort();
 });
 </script>
@@ -538,6 +519,44 @@ def get_team_class(team_name):
     slug = str(team_name).strip().lower()
     return f"team-{slug}"
 
+# ★新規追加: 日付（3月11日）を境界にした年齢・経験年数計算ロジック
+def calc_nfl_age_exp(birth_date_str, entering_year):
+    today = datetime.now()
+    
+    # 1. 年齢計算 (誕生日ベースで正確に計算)
+    age_display = "---"
+    if birth_date_str and str(birth_date_str).strip() and str(birth_date_str) != "nan":
+        try:
+            birth = datetime.strptime(str(birth_date_str).strip(), '%Y-%m-%d')
+            # 満年齢
+            years = today.year - birth.year - ((today.month, today.day) < (birth.month, birth.day))
+            # 12ヶ月分率で小数点計算
+            month_diff = (today.month - birth.month + 12) % 12
+            if today.day < birth.day:
+                month_diff -= 1
+            age_val = years + (max(0, month_diff) / 12.0)
+            age_display = f"{age_val:.1f} Yrs"
+        except:
+            pass
+
+    # 2. 経験年数計算 (3月11日を新シーズン開始とみなす)
+    # 今年の3月11日を作成
+    league_start = datetime(today.year, LEAGUE_START_MONTH, LEAGUE_START_DAY)
+    
+    # 今日がリーグ開始日より前なら、まだ「去年」として計算
+    if today < league_start:
+        calc_year = today.year - 1
+    else:
+        calc_year = today.year
+
+    try:
+        exp_val = calc_year - int(float(entering_year))
+        exp_display = "Exp: R" if exp_val <= 0 else f"Exp: {exp_val}"
+    except:
+        exp_display = "-"
+
+    return age_display, exp_display
+
 def generate_html_content(df):
     position_order = {
         "QB": 0, "RB": 1, "WR": 2, "TE": 3, "OL": 4, 
@@ -600,6 +619,9 @@ def generate_html_content(df):
         dob = str(row.get("Date Of Birth", ""))
         entry_year = safe_number(row.get("Entering Year", 0))
         
+        # ★計算ロジック呼び出し
+        age_str, exp_str = calc_nfl_age_exp(dob, entry_year)
+
         join_style_raw = str(row.get("Joining Style", "Draft"))
         join_style = join_style_raw.upper()
         join_style_lower = join_style_raw.lower()
@@ -668,19 +690,16 @@ def generate_html_content(df):
             card_extra_class += " is-new"
             badge_new_block = '<div class="pop-badge-wrapper is-new"><span class="pop-badge badge-new">NEW</span></div>'
 
-        # ★修正: All-Pro 1st/2ndの識別とカード色設定
-        if "All-Pro" in honors: # 1stも2ndも "All-Pro" という文字を含むためこれでOK
+        if "All-Pro" in honors:
             card_extra_class += " is-allpro"
         elif "Pro Bowl" in honors:
             card_extra_class += " is-probowl"
 
-        # バッジの文字列生成 (1st/2ndの区別)
         honor_spans = ""
         if "All-Pro 1st" in honors:
             honor_spans += '<span class="pop-badge badge-honor">ALL-PRO 1st</span>'
         elif "All-Pro 2nd" in honors:
             honor_spans += '<span class="pop-badge badge-honor">ALL-PRO 2nd</span>'
-        # 万が一 "All-Pro" だけの設定があった場合のフォールバック（または過去データ用）
         elif "All-Pro" in honors and "1st" not in honors and "2nd" not in honors:
             honor_spans += '<span class="pop-badge badge-honor">ALL-PRO</span>'
 
@@ -703,6 +722,7 @@ def generate_html_content(df):
 
         data_search = f"{name} {college} {number} {primary_pos} {fa_year}".lower()
 
+        # ★HTML部分修正: exp_str と age_str を埋め込み
         player_html = f"""
   <li class="player-card {card_extra_class}" 
       data-status="{status}" 
@@ -737,9 +757,9 @@ def generate_html_content(df):
                <span class="badge-method-part">{join_style} '{str(join_year)[-2:]}</span>
                <span class="badge-team-part {acq_team_class}">{badge_team_label}</span>
              </div>
-             <span class="meta-data meta-exp" data-entry="{entry_year}">---</span>
+             <span class="meta-data meta-exp">{exp_str}</span>
              <span class="divider">/</span>
-             <span class="meta-data meta-age" data-birth="{dob}">---</span>
+             <span class="meta-data meta-age">{age_str}</span>
           </div>
         </div>
 
