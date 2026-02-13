@@ -109,7 +109,7 @@ def generate_full_page_html(news_data):
     return f'''
 <div class="news-list-wrapper">
     <header class="news-list-header">
-        <h2 class="news-list-title">NEWS {TARGET_SEASON}</h2>
+        <h2 class="news-list-title">NEWS // {TARGET_SEASON}</h2>
         <p class="news-list-sub">{TARGET_SEASON}シーズンのJAX関連ニュース一覧</p>
     </header>
     <div class="news-filter-bar">
@@ -200,7 +200,7 @@ def main():
     print(f"Fetching {TARGET_SEASON} News for Archive...")
     archive_news = fetch_news_from_notion(season_filter=TARGET_SEASON, page_size=100)
     archive_html = generate_full_page_html(archive_news)
-    update_hatena_page(HATENA_NEWS_PAGE_ID, f"NEWS {TARGET_SEASON}", archive_html)
+    update_hatena_page(HATENA_NEWS_PAGE_ID, f"NEWS // {TARGET_SEASON}", archive_html)
     
     # 2. ニュースバー用データ取得 (全期間から最新10件)
     print("Fetching Global Latest News for Bar...")
