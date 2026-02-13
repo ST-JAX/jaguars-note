@@ -452,7 +452,7 @@ document.addEventListener("DOMContentLoaded", function () {
 </script>"""
 
         # メイン更新 (ページタイトルも自動で年度が入るように修正)
-        update_hatena(HATENA_SCHEDULE_PAGE_ID, f"{CURRENT_SEASON} Game Schedule", full_html)
+        update_hatena(HATENA_SCHEDULE_PAGE_ID, f"SCHEDULE // {CURRENT_SEASON}", full_html)
 
         # ヘッダー用Snippet更新
         if HATENA_LATEST_SCHEDULE_PAGE_ID:
