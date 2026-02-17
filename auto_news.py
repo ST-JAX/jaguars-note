@@ -33,7 +33,9 @@ TYPE_MAP = {
     "Injury": "injury",
     "News": "news",
     "Roster Move": "roster-move",
-    "Trade": "trade"
+    "Trade": "trade",
+    "Coaching": "coaching",
+    "Awards": "awards"
 }
 
 def fetch_news_from_notion(season_filter=None, page_size=100):
@@ -121,6 +123,8 @@ def generate_full_page_html(news_data):
         <button class="news-filter-btn" data-filter="news">News</button> 
         <button class="news-filter-btn" data-filter="roster-move">Roster Move</button> 
         <button class="news-filter-btn" data-filter="trade">Trade</button>
+        <button class="news-filter-btn" data-filter="coaching">Coaching</button>
+        <button class="news-filter-btn" data-filter="awards">Awards</button>
     </div>
     <ul class="news-list js-news-list">
         {items_html}
