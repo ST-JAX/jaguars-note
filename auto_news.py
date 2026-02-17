@@ -110,10 +110,6 @@ def generate_full_page_html(news_data):
 
     return f'''
 <div class="news-list-wrapper">
-    <header class="news-list-header">
-        <h2 class="news-list-title">NEWS // {TARGET_SEASON}</h2>
-        <p class="news-list-sub">{TARGET_SEASON}シーズンのJAX関連ニュース一覧</p>
-    </header>
     <div class="news-filter-bar">
         <button class="news-filter-btn is-active" data-filter="all">All</button> 
         <button class="news-filter-btn" data-filter="contract">Contract</button> 
