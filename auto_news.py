@@ -69,10 +69,10 @@ def fetch_news_from_notion(season_filter=None, page_size=100):
     news_list = []
     for page in data["results"]:
         props = page["properties"]
-        
-        # タイトル取得
-        title_list = props.get("Title", {}).get("title", [])
-        title = title_list[0]["text"]["content"] if title_list else "No Title"
+
+        # Formatted News（Formula）から取得
+        formula_obj = props.get("Formatted News", {}).get("formula", {})
+        title = formula_obj.get("string") if formula_obj.get("string") else "No Title"
         
         # 日付取得
         date_obj = props.get("Date", {}).get("date")
