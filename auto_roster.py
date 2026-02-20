@@ -29,17 +29,6 @@ HATENA_BLOG_ID = os.environ.get('HATENA_BLOG')
 HATENA_API_KEY = os.environ.get('HATENA_API_KEY')
 TARGET_ENTRY_ID = os.environ.get('HATENA_LATEST_ROSTER_PAGE_ID')
 
-NOTION_FILTER = {
-    "and": [
-        {
-            "property": "Status",
-            "status": {
-                "does_not_equal": "Left"
-            }
-        }
-    ]
-}
-
 # 画像URLマッピング
 POSITION_IMAGES = {
     "QB": "https://cdn-ak.f.st-hatena.com/images/fotolife/S/StaiL21/20251214/20251214001759.png",
@@ -58,6 +47,7 @@ POSITION_IMAGES = {
     "RS": "https://cdn-ak.f.st-hatena.com/images/fotolife/S/StaiL21/20251214/20251214042043.png",
 }
 
+# ★CSSを追加：Transactions用のスタイル定義
 CONTROL_PANEL_HTML = """
   <div class="control-panel">
     <div class="panel-header">
@@ -212,7 +202,6 @@ CONTROL_PANEL_HTML = """
   </div>
 """
 
-# ★JSの修正: 動的な計算ロジック（calcAge/calcExp）を削除してスリム化
 JS_CONTENT = """
 <p>
 <script>
@@ -220,10 +209,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const cards = document.querySelectorAll('.player-card');
   const playerList = document.querySelector("#rosterList");
 
-  // ここにあった calcAge, calcExp は削除しました（Python側で焼き込むため）
-
   cards.forEach(card => {
-    // 開閉機能のみ残す
     const toggle = card.querySelector('.player-toggle');
     if (toggle) {
       toggle.addEventListener('click', () => {
@@ -251,7 +237,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const posPriority = { 
     QB:0, RB:1, WR:2, TE:3, OL:4, DL:5, EDGE:6, LB:7, CB:8, S:9, K:10, P:11, LS:12, RS:13, UNK:99 
   };
-   
+    
   const statusPriority = { active: 0, ir: 1, pup: 2, nfi: 3, ps: 4, susp: 5, eip: 6, out: 99 };
 
   const doFilterAndSort = () => {
@@ -340,7 +326,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
   }
-   
+    
   doFilterAndSort();
 });
 </script>
@@ -394,7 +380,6 @@ def fetch_roster_data():
     print("Fetching data from Notion...", file=sys.stderr)
 
     while has_more:
-        # ★全データを取得
         payload = {}
         if next_cursor:
             payload["start_cursor"] = next_cursor
@@ -432,9 +417,10 @@ def fetch_roster_data():
             "Contract": get_property_value(page, "Contract"),
             "Salary Cap": get_property_value(page, "Salary Cap"),
             "FA": get_property_value(page, "FA"),
-            "Notes": get_property_value(page, "Notes"),
             "Honors": get_property_value(page, "Honors"),
-            "Leave": get_property_value(page, "Leave")
+            "Leave": get_property_value(page, "Leave"),
+            # ★変更：Notes -> Transactions
+            "Transactions": get_property_value(page, "Transactions")
         }
         
         props = page.get("properties", {})
@@ -499,7 +485,6 @@ def determine_status(row):
 
 def get_status_rank(row):
     s = str(row.get("Status", "")).strip()
-    # Leftは最下位
     leave_val = str(row.get("Leave", "")).strip()
     if leave_val and leave_val != "nan" and leave_val != "":
         return 99
@@ -519,18 +504,15 @@ def get_team_class(team_name):
     slug = str(team_name).strip().lower()
     return f"team-{slug}"
 
-# ★新規追加: 日付（3月11日）を境界にした年齢・経験年数計算ロジック
 def calc_nfl_age_exp(birth_date_str, entering_year):
     today = datetime.now()
     
-    # 1. 年齢計算 (誕生日ベースで正確に計算)
+    # 1. 年齢計算
     age_display = "---"
     if birth_date_str and str(birth_date_str).strip() and str(birth_date_str) != "nan":
         try:
             birth = datetime.strptime(str(birth_date_str).strip(), '%Y-%m-%d')
-            # 満年齢
             years = today.year - birth.year - ((today.month, today.day) < (birth.month, birth.day))
-            # 12ヶ月分率で小数点計算
             month_diff = (today.month - birth.month + 12) % 12
             if today.day < birth.day:
                 month_diff -= 1
@@ -539,11 +521,9 @@ def calc_nfl_age_exp(birth_date_str, entering_year):
         except:
             pass
 
-    # 2. 経験年数計算 (3月11日を新シーズン開始とみなす)
-    # 今年の3月11日を作成
+    # 2. 経験年数計算 (3月11日境界)
     league_start = datetime(today.year, LEAGUE_START_MONTH, LEAGUE_START_DAY)
     
-    # 今日がリーグ開始日より前なら、まだ「去年」として計算
     if today < league_start:
         calc_year = today.year - 1
     else:
@@ -619,7 +599,6 @@ def generate_html_content(df):
         dob = str(row.get("Date Of Birth", ""))
         entry_year = safe_number(row.get("Entering Year", 0))
         
-        # ★計算ロジック呼び出し
         age_str, exp_str = calc_nfl_age_exp(dob, entry_year)
 
         join_style_raw = str(row.get("Joining Style", "Draft"))
@@ -679,7 +658,29 @@ def generate_html_content(df):
                     fmt_c_items.append(f'<span class="stat-item">{c.strip()}</span>')
             combine_html = " / ".join(fmt_c_items)
 
-        notes = str(row.get("Notes", "")) if pd.notna(row.get("Notes")) else ""
+        # ★変更：TransactionsのHTML生成ロジック
+        raw_trans = str(row.get("Transactions", "")) if pd.notna(row.get("Transactions")) else ""
+        trans_items_html = ""
+        
+        if raw_trans.strip() and raw_trans != "nan":
+            lines = raw_trans.split("\n")
+            for line in lines:
+                if not line.strip(): continue
+                
+                # "|" があれば日付と内容に分離
+                if "|" in line:
+                    date_part, content_part = line.split("|", 1)
+                    trans_items_html += f"""
+                        <div class="trans-line">
+                            <span class="trans-date">{date_part.strip()}</span>
+                            <span class="trans-content">{content_part.strip()}</span>
+                        </div>
+                    """
+                else:
+                    trans_items_html += f'<div class="trans-line">{line.strip()}</div>'
+        else:
+            trans_items_html = '<div class="trans-line no-data">No recent activity</div>'
+
         honors = str(row.get("Honors", "")) if pd.notna(row.get("Honors")) else ""
 
         badge_new_block = ""
@@ -722,7 +723,7 @@ def generate_html_content(df):
 
         data_search = f"{name} {college} {number} {primary_pos} {fa_year}".lower()
 
-        # ★HTML部分修正: exp_str と age_str を埋め込み
+        # ★HTML部分修正: NotesをTransactionsに差し替え
         player_html = f"""
   <li class="player-card {card_extra_class}" 
       data-status="{status}" 
@@ -796,7 +797,10 @@ def generate_html_content(df):
               </div>
             </div>
             
-            <div class="notes-container"><span class="label">NOTE:</span> {notes}</div>
+            <div class="transactions-container">
+                <span class="label">TRANSACTIONS</span>
+                {trans_items_html}
+            </div>
           </div>
         </div>
       </div> 
