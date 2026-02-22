@@ -415,7 +415,7 @@ def fetch_roster_data():
             "Draft Overall": get_property_value(page, "Draft Overall"),
             "Former Team": get_property_value(page, "Former Team"),
             "Contract": get_property_value(page, "Contract"),
-            "Salary Cap": get_property_value(page, "Salary Cap"),
+            "Cap Salary": get_property_value(page, "Cap Salary"),
             "FA": get_property_value(page, "FA"),
             "Honors": get_property_value(page, "Honors"),
             "Leave": get_property_value(page, "Leave"),
@@ -460,7 +460,13 @@ def safe_number(val):
 
 def format_cap(val):
     try:
-        cap = int(float(str(val).replace("$", "").replace(",", "")))
+        # 入力値を文字列にして、カンマや$を除去してスペース区切りにする
+        s = str(val).replace("$", "").replace(",", " ").strip()
+        
+        # 最初の要素（今年の分）だけ取り出す
+        first_val = s.split()[0]
+        
+        cap = int(float(first_val))
         if cap >= 1_000_000:
             return f"${cap / 1_000_000:.1f}M", cap
         elif cap >= 1_000:
@@ -620,7 +626,7 @@ def generate_html_content(df):
         if contract_raw and contract_raw != "nan" and contract_raw != "-":
              contract_display = contract_raw
 
-        cap_val_raw = row.get("Salary Cap", 0)
+        cap_val_raw = row.get("Cap Salary", 0)
         cap_disp, cap_val = format_cap(cap_val_raw)
 
         fa_year_raw = row.get("FA", "---")
