@@ -11,7 +11,7 @@ from requests.auth import HTTPBasicAuth
 # ==============================================================================
 CONFIG = {
     "CURRENT_YEAR": 2025,
-    "LEAGUE_CAP_LIMIT_MILLION": 279.2,  # 百万ドル単位で入力（例: 255.4M）
+    "LEAGUE_CAP_LIMIT_MILLION": 279200000,
     "IS_TOP51_MODE": False               # True: オフシーズン(Top51), False: シーズン中(全選手)
 }
 
