@@ -121,6 +121,13 @@ CONTROL_PANEL_HTML = """
                           <div class="fa-year">YEAR</div>
                         </div>
                       </div>
+                      <div class="transactions-container">
+                        <span class="label">TRANSACTIONS</span>
+                        <div class="trans-line">
+                          <span class="trans-date">20XX/XX/XX</span>
+                          <span class="trans-content">Transaction</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div> 
