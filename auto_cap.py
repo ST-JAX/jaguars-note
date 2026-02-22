@@ -10,9 +10,10 @@ from requests.auth import HTTPBasicAuth
 # 0. ⚙️ シーズン設定（毎年・時期によって変更する部分）
 # ==============================================================================
 CONFIG = {
-    "CURRENT_YEAR": 2025,
-    "LEAGUE_CAP_LIMIT_MILLION": 279.2,
-    "IS_TOP51_MODE": False               # True: オフシーズン(Top51), False: シーズン中(全選手)
+    "CURRENT_YEAR": 2025,               # ※もしデータが2026年1年目のものなら2026にしてください
+    "LEAGUE_CAP_LIMIT_MILLION": 279.2,  # リーグ基本キャップ
+    "CARRYOVER_MILLION": 15.890203,           # ★追加: 前年からの繰越金や調整額（ある場合）
+    "IS_TOP51_MODE": True               # True: オフシーズン(Top51), False: シーズン中(全選手)
 }
 
 # ==============================================================================
@@ -24,7 +25,8 @@ CAP_DB_ID = os.environ.get('NOTION_ROSTER_DB_ID')
 HATENA_ID = os.environ.get('HATENA_USER')
 HATENA_BLOG_ID = os.environ.get('HATENA_BLOG')
 HATENA_API_KEY = os.environ.get('HATENA_API_KEY')
-TARGET_ENTRY_ID = os.environ.get('HATENA_LATEST_CAP_PAGE_ID')
+
+TARGET_ENTRY_ID = os.environ.get('HATENA_LATEST_CAP_PAGE_ID') or "" 
 
 # ==============================================================================
 # 2. 補助関数
@@ -55,7 +57,6 @@ def get_property_value(page, prop_name):
 
 def determine_unit(positions_str):
     if not positions_str: return "Unknown"
-    # 最初のポジションを主ポジションとする
     primary_pos = [p.strip().upper() for p in positions_str.split(",") if p.strip()][0]
     
     offense = ['QB', 'RB', 'FB', 'WR', 'TE', 'OL', 'C', 'G', 'T', 'OT', 'OG']
@@ -68,7 +69,7 @@ def determine_unit(positions_str):
     return "Unknown"
 
 def format_money(amount):
-    """万ドル(整数)を $○○.○M 表記に変換"""
+    """ドル(整数)を $○○.○M 表記に変換"""
     if not amount or amount == 0: return "$0M"
     is_negative = amount < 0
     in_millions = abs(amount) / 1000000
@@ -119,10 +120,9 @@ def fetch_cap_data():
         
         unit = determine_unit(pos_str)
         
-        # Dead判定ロジック
         if status == "Left":
             if leave_year == "" or float(leave_year) < (CONFIG["CURRENT_YEAR"] - 1):
-                continue # 古いデータはスキップ
+                continue
             unit = "Dead"
             
         fa_val = get_property_value(page, "FA")
@@ -132,13 +132,11 @@ def fetch_cap_data():
         act_dead_str = get_property_value(page, "Actual Dead") or "0"
         pot_dead_str = get_property_value(page, "Potential Dead") or "0"
         
-        # カンマ区切りのパース
         caps = [int(float(s.strip())) if s.strip().replace('.','',1).isdigit() else 0 for s in cap_str.split(",")]
         act_deads = [int(float(s.strip())) if s.strip().replace('.','',1).isdigit() else 0 for s in act_dead_str.split(",")]
         pot_deads = [int(float(s.strip())) if s.strip().replace('.','',1).isdigit() else 0 for s in pot_dead_str.split(",")]
         
-        # 不足分を0で埋める
-        max_len = max(len(caps), len(act_deads))
+        max_len = max(len(caps), len(act_deads), len(pot_deads))
         caps += [0] * (max_len - len(caps))
         act_deads += [0] * (max_len - len(act_deads))
         pot_deads += [0] * (max_len - len(pot_deads))
@@ -148,16 +146,20 @@ def fetch_cap_data():
         pot_dead = pot_deads[0]
         savings = 0 if unit == "Dead" else current_cap - pot_dead
         
-        timeline_data = { (CONFIG["CURRENT_YEAR"] + i): {"cap": caps[i], "act": act_deads[i]} for i in range(max_len) }
+        # ★修正: timelineData に pot (Potential Dead) も保存しておく
+        timeline_data = { (CONFIG["CURRENT_YEAR"] + i): {"cap": caps[i], "act": act_deads[i], "pot": pot_deads[i]} for i in range(max_len) }
         
-        # ポテンシャルカット自動判定
+        # ★修正: ポテンシャルカット自動判定（セービング額ベース）
         auto_pot_year = None
         for i in range(len(caps)):
             y = CONFIG["CURRENT_YEAR"] + i
             c = caps[i]
             d = pot_deads[i] if i < len(pot_deads) else 0
+            savings_i = c - d
             if y >= fa_year or unit == "Dead": break
-            if (c - d) > 0 and c > 0 and (d / c) < 0.3:
+            
+            # 【新基準】節約額がプラスで、かつデッドマネー以上の金額が浮く年（セービング率50%超え）
+            if savings_i > 0 and c > 0 and savings_i >= d:
                 auto_pot_year = y
                 break
 
@@ -186,11 +188,12 @@ def fetch_cap_data():
 # ==============================================================================
 def generate_html_content(players, config):
     curr_year = config["CURRENT_YEAR"]
-    cap_limit = int(config["LEAGUE_CAP_LIMIT_MILLION"] * 1000000)
+    # ★修正: リーグキャップ ＋ 繰越金 で計算
+    total_cap_limit_million = config["LEAGUE_CAP_LIMIT_MILLION"] + config.get("CARRYOVER_MILLION", 0.0)
+    cap_limit = int(total_cap_limit_million * 1000000)
     is_top51 = config["IS_TOP51_MODE"]
     
     active_players = [p for p in players if p["unit"] != "Dead"]
-    # キャップヒット額で降順ソート
     active_players.sort(key=lambda x: x["currentCap"], reverse=True)
     
     top51_ids = [p["id"] for p in active_players[:51]]
@@ -209,21 +212,29 @@ def generate_html_content(players, config):
     team_total = total_cap + total_act_dead
     cap_space = cap_limit - team_total
     
-    # 投資割合の計算
     off_cap = sum(p["currentCap"] for p in countable_players if p["unit"] == "Offense")
     def_cap = sum(p["currentCap"] for p in countable_players if p["unit"] == "Defense")
+    st_cap = sum(p["currentCap"] for p in countable_players if p["unit"] == "Special Teams")
     
     off_pct = (off_cap / team_total * 100) if team_total > 0 else 0
     def_pct = (def_cap / team_total * 100) if team_total > 0 else 0
+    st_pct = (st_cap / team_total * 100) if team_total > 0 else 0
     dead_pct = (total_act_dead / team_total * 100) if team_total > 0 else 0
     
-    # ポジション別計算
     pos_dict = {}
     for p in countable_players:
-        pos_dict[p["position"]] = pos_dict.get(p["position"], 0) + p["currentCap"]
-    pos_stats = sorted([{"pos": k, "cap": v, "pct": (v / total_cap * 100) if total_cap > 0 else 0} for k, v in pos_dict.items()], key=lambda x: x["cap"], reverse=True)
+        pos_name = "ST" if p["unit"] == "Special Teams" else p["position"]
+        pos_dict[pos_name] = pos_dict.get(pos_name, 0) + p["currentCap"]
+        
+    fixed_pos_order = ["QB", "RB", "WR", "TE", "OL", "DL", "EDGE", "LB", "CB", "S", "ST"]
+    pos_stats = []
+    for pos in fixed_pos_order:
+        if pos in pos_dict:
+            pos_stats.append({"pos": pos, "cap": pos_dict[pos], "pct": (pos_dict[pos] / total_cap * 100) if total_cap > 0 else 0})
+            del pos_dict[pos]
+    for pos, cap in sorted(pos_dict.items(), key=lambda x: x[1], reverse=True):
+        pos_stats.append({"pos": pos, "cap": cap, "pct": (cap / total_cap * 100) if total_cap > 0 else 0})
 
-    # ランキング抽出
     top_caps = sorted(active_players, key=lambda x: x["currentCap"], reverse=True)[:5]
     top_pots = sorted(active_players, key=lambda x: x["potentialDead"], reverse=True)[:5]
     top_saves = sorted(active_players, key=lambda x: x["savings"], reverse=True)[:5]
@@ -231,18 +242,15 @@ def generate_html_content(players, config):
     
     max_savings = max([p["savings"] for p in active_players]) if active_players else 0
 
-    # ----- HTML組み立て開始 -----
     html_lines = []
     html_lines.append('<div class="cap-dashboard-wrapper">')
     
-    # [ヘッダー (見出し重複を避けたステータスバー)]
     html_lines.append(f"""
     <div class="cap-header">
         <div class="cap-header-titles">
             <span class="cap-subtitle"><strong>【{curr_year}シーズン】</strong> 現在のキャップ状況・確定デッドマネー・契約見通し</span>
         </div>
         <div class="cap-header-stats">
-            <div class="cap-mode-badge">{'Top 51 モード適用中' if is_top51 else '全選手(シーズン中)モード'}</div>
             <div class="cap-limit-info">League Cap: {format_money(cap_limit)}</div>
             <div class="cap-space-info {'space-ok' if cap_space >= 0 else 'space-ng'}">
                 Remaining: {format_money(cap_space)}
@@ -251,7 +259,6 @@ def generate_html_content(players, config):
     </div>
     """)
     
-    # [サマリーカード]
     html_lines.append(f"""
     <div class="cap-summary-grid">
         <div class="cap-summary-card">
@@ -269,7 +276,6 @@ def generate_html_content(players, config):
     </div>
     """)
     
-    # [TOP 5 ランキング]
     def build_ranking_html(title, items, val_key, val_class):
         lines = [f'<div class="cap-ranking-box"><h4>{title}</h4><ul class="cap-ranking-list">']
         if not items:
@@ -293,7 +299,6 @@ def generate_html_content(players, config):
     html_lines.append(build_ranking_html("Actual Dead TOP5", top_deads, "currentActualDead", "val-actual-dead"))
     html_lines.append('</div>')
     
-    # [グラフ: 投資割合]
     html_lines.append('<div class="cap-charts-grid">')
     html_lines.append(f"""
     <div class="cap-chart-box">
@@ -301,17 +306,18 @@ def generate_html_content(players, config):
         <div class="cap-chart-bar">
             <div class="cap-segment seg-off" style="width: {off_pct}%;">{'%.1f%%' % off_pct if off_pct > 10 else ''}</div>
             <div class="cap-segment seg-def" style="width: {def_pct}%;">{'%.1f%%' % def_pct if def_pct > 10 else ''}</div>
+            <div class="cap-segment seg-st" style="width: {st_pct}%;">{'%.1f%%' % st_pct if st_pct > 10 else ''}</div>
             <div class="cap-segment seg-dead" style="width: {dead_pct}%;">{'%.1f%%' % dead_pct if dead_pct > 5 else ''}</div>
         </div>
         <div class="cap-chart-legend">
             <span class="legend-item"><span class="dot dot-off"></span>Offense</span>
             <span class="legend-item"><span class="dot dot-def"></span>Defense</span>
+            <span class="legend-item"><span class="dot dot-st"></span>ST</span>
             <span class="legend-item"><span class="dot dot-dead"></span>Dead</span>
         </div>
     </div>
     """)
     
-    # [グラフ: ポジション別]
     pos_html = ""
     pos_legend = ""
     for i, st in enumerate(pos_stats):
@@ -328,8 +334,7 @@ def generate_html_content(players, config):
     """)
     html_lines.append('</div>')
     
-    # [タイムライン]
-    timeline_players = sorted(players, key=lambda x: x["currentActualDead"] if x["unit"] == "Dead" else x["currentCap"], reverse=True)[:15]
+    timeline_players = sorted(active_players, key=lambda x: x["currentCap"], reverse=True)[:15]
     if timeline_players:
         max_t_years = max([p["contractLength"] for p in timeline_players] + [5])
         t_years = [curr_year + i for i in range(max_t_years)]
@@ -339,26 +344,35 @@ def generate_html_content(players, config):
         html_lines.append('<p class="cap-note">※チーム負担額上位15名のみ表示</p>')
         html_lines.append('<div class="cap-table-scroll"><div class="cap-timeline-inner">')
         
-        # 年ヘッダー
         html_lines.append('<div class="tl-header-row"><div class="tl-name-col">Player</div><div class="tl-years-col">')
         for y in t_years: html_lines.append(f'<div class="tl-year">{y}</div>')
         html_lines.append('</div></div>')
         
         for tp in timeline_players:
-            dot_class = "dot-dead" if tp["unit"] == "Dead" else "dot-off" if tp["unit"] == "Offense" else "dot-def"
+            dot_class = "dot-off" if tp["unit"] == "Offense" else "dot-def" if tp["unit"] == "Defense" else "dot-st"
             html_lines.append(f'<div class="tl-row"><div class="tl-name-col"><span class="dot {dot_class}"></span>{html.escape(tp["name"])}</div><div class="tl-years-col">')
             
             for y in t_years:
-                is_void = (tp["unit"] != "Dead" and y >= tp["faYear"])
-                is_fa = (tp["unit"] != "Dead" and y == tp["faYear"])
-                is_pot = (y == tp["potentialOutYear"])
+                is_fa_year_or_later = (tp["unit"] != "Dead" and y >= tp["faYear"])
+                is_fa_exact = (tp["unit"] != "Dead" and y == tp["faYear"])
+                is_pot_cut = (y == tp["potentialOutYear"])
                 
-                c_data = tp["timelineData"].get(y, {"cap": 0, "act": 0})
+                c_data = tp["timelineData"].get(y, {"cap": 0, "act": 0, "pot": 0})
+                
+                # 基本額はキャップヒット + 確定デッド
                 amount = c_data["cap"] + c_data["act"]
+                
+                # ★修正: FA年以降で、Capに金額がなく Potential Dead に金額がある場合、VOID爆発額として扱う
+                is_void_burst = False
+                if is_fa_year_or_later and amount == 0 and c_data["pot"] > 0:
+                    amount = c_data["pot"]
+                    is_void_burst = True
+                
+                is_void = is_fa_year_or_later and amount > 0
                 
                 cell_classes = ["tl-cell"]
                 if amount > 0:
-                    bg = "bg-dead" if tp["unit"] == "Dead" else "bg-void" if is_void else "bg-off" if tp["unit"] == "Offense" else "bg-def"
+                    bg = "bg-dead" if tp["unit"] == "Dead" else "bg-void" if is_void else "bg-off" if tp["unit"] == "Offense" else "bg-def" if tp["unit"] == "Defense" else "bg-st"
                     cell_classes.append(bg)
                     
                 html_lines.append(f'<div class="{" ".join(cell_classes)}">')
@@ -367,15 +381,14 @@ def generate_html_content(players, config):
                     html_lines.append(f'<span class="{txt_cls}">{format_money(amount)}</span>')
                     if is_void and tp["unit"] != "Dead": html_lines.append('<span class="badge-void">VOID</span>')
                 
-                if is_pot: html_lines.append('<span class="badge-pot">✂️</span>')
-                if is_fa and amount == 0: html_lines.append('<span class="badge-fa">FA</span>')
+                if is_pot_cut: html_lines.append('<span class="badge-pot">✂️</span>')
+                if is_fa_exact and amount == 0: html_lines.append('<span class="badge-fa">FA</span>')
                 html_lines.append('</div>')
                 
             html_lines.append('</div></div>')
             
         html_lines.append('</div></div></div>')
     
-    # [詳細テーブル]
     html_lines.append('<div class="cap-table-section">')
     html_lines.append('<div class="cap-table-header">')
     html_lines.append('<h4>Active Roster Details</h4>')
@@ -418,7 +431,6 @@ def generate_html_content(players, config):
     html_lines.append('</tbody></table></div></div>')
     html_lines.append('</div>')
     
-    # JSスクリプト（検索とソートのみ）
     js_content = """
     <p>
     <script>
@@ -431,7 +443,7 @@ def generate_html_content(players, config):
         const headers = document.querySelectorAll("#capTable th.sortable");
         
         let sortCol = "cap";
-        let sortDir = -1; // -1: desc, 1: asc
+        let sortDir = -1; 
 
         function renderTable() {
             const query = (searchInput.value || "").toLowerCase().trim();
@@ -496,13 +508,11 @@ def update_hatena_blog(content_body):
         import xml.etree.ElementTree as ET
         root = ET.fromstring(get_resp.text)
         ns = {'atom': 'http://www.w3.org/2005/Atom'}
-        # 既存のカテゴリー設定は残す
         categories = [c.attrib['term'] for c in root.findall('atom:category', ns)]
     except Exception as e:
         print(f"[ERROR] Failed to get current entry: {e}", file=sys.stderr)
         return
 
-    # ★CONFIG から新しいタイトルを組み立てる
     curr_year = CONFIG["CURRENT_YEAR"]
     new_title = f"SALARY CAP // {curr_year}"
 
