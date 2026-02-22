@@ -42,3 +42,4 @@ jobs:
           python auto_schedule.py
           python auto_news.py
           python auto_roster.py
+          python auto_cap.py
