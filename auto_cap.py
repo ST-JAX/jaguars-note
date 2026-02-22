@@ -71,7 +71,7 @@ def format_money(amount):
     """万ドル(整数)を $○○.○M 表記に変換"""
     if not amount or amount == 0: return "$0M"
     is_negative = amount < 0
-    in_millions = abs(amount) / 100
+    in_millions = abs(amount) / 1000000
     formatted = f"{in_millions:.2f}"
     if "." in formatted:
         formatted = formatted.rstrip("0").rstrip(".")
