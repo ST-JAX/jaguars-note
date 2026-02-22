@@ -12,8 +12,8 @@ from requests.auth import HTTPBasicAuth
 CONFIG = {
     "CURRENT_YEAR": 2025,               # ※もしデータが2026年1年目のものなら2026にしてください
     "LEAGUE_CAP_LIMIT_MILLION": 279.2,  # リーグ基本キャップ
-    "CARRYOVER_MILLION": 15.890203,           # ★追加: 前年からの繰越金や調整額（ある場合）
-    "IS_TOP51_MODE": True               # True: オフシーズン(Top51), False: シーズン中(全選手)
+    "CARRYOVER_MILLION": $15.890203,           # ★追加: 前年からの繰越金や調整額（ある場合）
+    "IS_TOP51_MODE": False               # True: オフシーズン(Top51), False: シーズン中(全選手)
 }
 
 # ==============================================================================
@@ -146,10 +146,8 @@ def fetch_cap_data():
         pot_dead = pot_deads[0]
         savings = 0 if unit == "Dead" else current_cap - pot_dead
         
-        # ★修正: timelineData に pot (Potential Dead) も保存しておく
         timeline_data = { (CONFIG["CURRENT_YEAR"] + i): {"cap": caps[i], "act": act_deads[i], "pot": pot_deads[i]} for i in range(max_len) }
         
-        # ★修正: ポテンシャルカット自動判定（セービング額ベース）
         auto_pot_year = None
         for i in range(len(caps)):
             y = CONFIG["CURRENT_YEAR"] + i
@@ -158,7 +156,6 @@ def fetch_cap_data():
             savings_i = c - d
             if y >= fa_year or unit == "Dead": break
             
-            # 【新基準】節約額がプラスで、かつデッドマネー以上の金額が浮く年（セービング率50%超え）
             if savings_i > 0 and c > 0 and savings_i >= d:
                 auto_pot_year = y
                 break
@@ -188,7 +185,6 @@ def fetch_cap_data():
 # ==============================================================================
 def generate_html_content(players, config):
     curr_year = config["CURRENT_YEAR"]
-    # ★修正: リーグキャップ ＋ 繰越金 で計算
     total_cap_limit_million = config["LEAGUE_CAP_LIMIT_MILLION"] + config.get("CARRYOVER_MILLION", 0.0)
     cap_limit = int(total_cap_limit_million * 1000000)
     is_top51 = config["IS_TOP51_MODE"]
@@ -251,6 +247,7 @@ def generate_html_content(players, config):
             <span class="cap-subtitle"><strong>【{curr_year}シーズン】</strong> 現在のキャップ状況・確定デッドマネー・契約見通し</span>
         </div>
         <div class="cap-header-stats">
+            <div class="cap-mode-badge">{'Top 51 モード適用中' if is_top51 else '全選手(シーズン中)モード'}</div>
             <div class="cap-limit-info">League Cap: {format_money(cap_limit)}</div>
             <div class="cap-space-info {'space-ok' if cap_space >= 0 else 'space-ng'}">
                 Remaining: {format_money(cap_space)}
@@ -359,10 +356,8 @@ def generate_html_content(players, config):
                 
                 c_data = tp["timelineData"].get(y, {"cap": 0, "act": 0, "pot": 0})
                 
-                # 基本額はキャップヒット + 確定デッド
                 amount = c_data["cap"] + c_data["act"]
                 
-                # ★修正: FA年以降で、Capに金額がなく Potential Dead に金額がある場合、VOID爆発額として扱う
                 is_void_burst = False
                 if is_fa_year_or_later and amount == 0 and c_data["pot"] > 0:
                     amount = c_data["pot"]
@@ -411,14 +406,16 @@ def generate_html_content(players, config):
         <tbody>
     """)
     
+    # ★修正: ループ内で、21件目以降は初期状態で display: none を指定
     for i, p in enumerate(active_players):
         is_counted = not is_top51 or (p["id"] in top51_ids)
         row_cls = "" if is_counted else "not-counted"
         save_cls = "text-save" if p["savings"] > 0 else "text-danger"
+        display_style = 'style="display: none;"' if i >= 20 else ''
         
         search_txt = f"{p['name']} {p['position']}".lower()
         html_lines.append(f"""
-            <tr class="cap-roster-row {row_cls}" data-search="{html.escape(search_txt)}" data-cap="{p['currentCap']}" data-dead="{p['potentialDead']}" data-save="{p['savings']}">
+            <tr class="cap-roster-row {row_cls}" data-search="{html.escape(search_txt)}" data-cap="{p['currentCap']}" data-dead="{p['potentialDead']}" data-save="{p['savings']}" {display_style}>
                 <td class="td-rk">{i+1}</td>
                 <td class="td-name">{html.escape(p['name'])} {'<span class="badge-out">枠外</span>' if not is_counted else ''}</td>
                 <td class="td-pos"><span class="pos-tag">{p['position']}</span></td>
@@ -428,15 +425,25 @@ def generate_html_content(players, config):
             </tr>
         """)
         
-    html_lines.append('</tbody></table></div></div>')
-    html_lines.append('</div>')
+    html_lines.append('</tbody></table></div>')
     
+    # ★修正: さらに表示ボタンを追加
+    if len(active_players) > 20:
+        html_lines.append('<div class="cap-load-more-container" style="text-align: center; padding: 1rem;">')
+        html_lines.append('<button id="capLoadMoreBtn" class="cap-btn-load-more">さらに表示</button>')
+        html_lines.append('</div>')
+        
+    html_lines.append('</div>')
+    html_lines.append('</div>') # end of wrapper
+    
+    # ★修正: JS内に表示件数制御とボタンクリックイベントを追加
     js_content = """
     <p>
     <script>
     document.addEventListener("DOMContentLoaded", function () {
         const searchInput = document.getElementById("capSearchInput");
         const tableBody = document.querySelector("#capTable tbody");
+        const loadMoreBtn = document.getElementById("capLoadMoreBtn");
         if(!tableBody) return;
         
         const rows = Array.from(tableBody.querySelectorAll(".cap-roster-row"));
@@ -444,9 +451,17 @@ def generate_html_content(players, config):
         
         let sortCol = "cap";
         let sortDir = -1; 
+        let visibleCount = 20;
+        let currentQuery = "";
 
         function renderTable() {
             const query = (searchInput.value || "").toLowerCase().trim();
+            
+            // 検索内容が変わったら表示件数をリセット
+            if (query !== currentQuery) {
+                visibleCount = 20;
+                currentQuery = query;
+            }
             
             const visibleRows = rows.filter(row => {
                 if (!query) return true;
@@ -459,15 +474,35 @@ def generate_html_content(players, config):
                 return (valA - valB) * sortDir;
             });
             
+            // 一旦すべて非表示
             rows.forEach(r => r.style.display = "none");
-            visibleRows.forEach(r => {
+            
+            // visibleCount の数だけ表示してDOMに追加
+            const rowsToShow = visibleRows.slice(0, visibleCount);
+            rowsToShow.forEach(r => {
                 r.style.display = "";
                 tableBody.appendChild(r);
             });
+            
+            // もっと見るボタンの表示/非表示制御
+            if (loadMoreBtn) {
+                if (visibleCount < visibleRows.length) {
+                    loadMoreBtn.style.display = "inline-block";
+                } else {
+                    loadMoreBtn.style.display = "none";
+                }
+            }
         }
 
         if(searchInput) {
             searchInput.addEventListener("input", renderTable);
+        }
+        
+        if (loadMoreBtn) {
+            loadMoreBtn.addEventListener("click", () => {
+                visibleCount += 20;
+                renderTable();
+            });
         }
 
         headers.forEach(th => {
@@ -482,6 +517,9 @@ def generate_html_content(players, config):
                 renderTable();
             });
         });
+        
+        // 初期描画時にボタンの表示判定を走らせる
+        renderTable();
     });
     </script>
     </p>
