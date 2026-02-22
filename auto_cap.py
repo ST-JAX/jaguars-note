@@ -19,7 +19,6 @@ CONFIG = {
 # 1. 設定・定数
 # ==============================================================================
 NOTION_API_KEY = os.environ.get('NOTION_TOKEN') 
-# ※テスト・本番に合わせてDB IDを変更してください
 CAP_DB_ID = os.environ.get('NOTION_ROSTER_DB_ID') 
 
 HATENA_ID = os.environ.get('HATENA_USER')
@@ -61,7 +60,7 @@ def determine_unit(positions_str):
     
     offense = ['QB', 'RB', 'FB', 'WR', 'TE', 'OL', 'C', 'G', 'T', 'OT', 'OG']
     defense = ['DL', 'DT', 'DE', 'NT', 'EDGE', 'LB', 'ILB', 'OLB', 'CB', 'S', 'FS', 'SS', 'DB']
-    special_teams = ['K', 'P', 'LS']
+    special_teams = ['K', 'P', 'LS', 'RS']
     
     if primary_pos in offense: return "Offense"
     elif primary_pos in defense: return "Defense"
@@ -134,9 +133,9 @@ def fetch_cap_data():
         pot_dead_str = get_property_value(page, "Potential Dead") or "0"
         
         # カンマ区切りのパース
-        caps = [int(s.strip()) if s.strip().isdigit() else 0 for s in cap_str.split(",")]
-        act_deads = [int(s.strip()) if s.strip().isdigit() else 0 for s in act_dead_str.split(",")]
-        pot_deads = [int(s.strip()) if s.strip().isdigit() else 0 for s in pot_dead_str.split(",")]
+        caps = [int(float(s.strip())) if s.strip().replace('.','',1).isdigit() else 0 for s in cap_str.split(",")]
+        act_deads = [int(float(s.strip())) if s.strip().replace('.','',1).isdigit() else 0 for s in act_dead_str.split(",")]
+        pot_deads = [int(float(s.strip())) if s.strip().replace('.','',1).isdigit() else 0 for s in pot_dead_str.split(",")]
         
         # 不足分を0で埋める
         max_len = max(len(caps), len(act_deads))
@@ -183,7 +182,7 @@ def fetch_cap_data():
     return players
 
 # ==============================================================================
-# 4. HTMLの生成（Roster方式準拠）
+# 4. HTMLの生成
 # ==============================================================================
 def generate_html_content(players, config):
     curr_year = config["CURRENT_YEAR"]
@@ -236,12 +235,11 @@ def generate_html_content(players, config):
     html_lines = []
     html_lines.append('<div class="cap-dashboard-wrapper">')
     
-    # [ヘッダー]
+    # [ヘッダー (見出し重複を避けたステータスバー)]
     html_lines.append(f"""
     <div class="cap-header">
         <div class="cap-header-titles">
-            <h3>Team Salary Cap {curr_year}</h3>
-            <span class="cap-subtitle">今年のキャップ状況、確定デッド、契約見通し</span>
+            <span class="cap-subtitle"><strong>【{curr_year}シーズン】</strong> 現在のキャップ状況・確定デッドマネー・契約見通し</span>
         </div>
         <div class="cap-header-stats">
             <div class="cap-mode-badge">{'Top 51 モード適用中' if is_top51 else '全選手(シーズン中)モード'}</div>
@@ -332,49 +330,50 @@ def generate_html_content(players, config):
     
     # [タイムライン]
     timeline_players = sorted(players, key=lambda x: x["currentActualDead"] if x["unit"] == "Dead" else x["currentCap"], reverse=True)[:15]
-    max_t_years = max([p["contractLength"] for p in timeline_players] + [5])
-    t_years = [curr_year + i for i in range(max_t_years)]
-    
-    html_lines.append('<div class="cap-timeline-section">')
-    html_lines.append('<h4>Core Players Timeline</h4>')
-    html_lines.append('<p class="cap-note">※チーム負担額上位15名のみ表示</p>')
-    html_lines.append('<div class="cap-table-scroll"><div class="cap-timeline-inner">')
-    
-    # 年ヘッダー
-    html_lines.append('<div class="tl-header-row"><div class="tl-name-col">Player</div><div class="tl-years-col">')
-    for y in t_years: html_lines.append(f'<div class="tl-year">{y}</div>')
-    html_lines.append('</div></div>')
-    
-    for tp in timeline_players:
-        dot_class = "dot-dead" if tp["unit"] == "Dead" else "dot-off" if tp["unit"] == "Offense" else "dot-def"
-        html_lines.append(f'<div class="tl-row"><div class="tl-name-col"><span class="dot {dot_class}"></span>{html.escape(tp["name"])}</div><div class="tl-years-col">')
+    if timeline_players:
+        max_t_years = max([p["contractLength"] for p in timeline_players] + [5])
+        t_years = [curr_year + i for i in range(max_t_years)]
         
-        for y in t_years:
-            is_void = (tp["unit"] != "Dead" and y >= tp["faYear"])
-            is_fa = (tp["unit"] != "Dead" and y == tp["faYear"])
-            is_pot = (y == tp["potentialOutYear"])
-            
-            c_data = tp["timelineData"].get(y, {"cap": 0, "act": 0})
-            amount = c_data["cap"] + c_data["act"]
-            
-            cell_classes = ["tl-cell"]
-            if amount > 0:
-                bg = "bg-dead" if tp["unit"] == "Dead" else "bg-void" if is_void else "bg-off" if tp["unit"] == "Offense" else "bg-def"
-                cell_classes.append(bg)
-                
-            html_lines.append(f'<div class="{" ".join(cell_classes)}">')
-            if amount > 0:
-                txt_cls = "txt-void" if (is_void and tp["unit"] != "Dead") else "txt-val"
-                html_lines.append(f'<span class="{txt_cls}">{format_money(amount)}</span>')
-                if is_void and tp["unit"] != "Dead": html_lines.append('<span class="badge-void">VOID</span>')
-            
-            if is_pot: html_lines.append('<span class="badge-pot">✂️</span>')
-            if is_fa and amount == 0: html_lines.append('<span class="badge-fa">FA</span>')
-            html_lines.append('</div>')
-            
+        html_lines.append('<div class="cap-timeline-section">')
+        html_lines.append('<h4>Core Players Timeline</h4>')
+        html_lines.append('<p class="cap-note">※チーム負担額上位15名のみ表示</p>')
+        html_lines.append('<div class="cap-table-scroll"><div class="cap-timeline-inner">')
+        
+        # 年ヘッダー
+        html_lines.append('<div class="tl-header-row"><div class="tl-name-col">Player</div><div class="tl-years-col">')
+        for y in t_years: html_lines.append(f'<div class="tl-year">{y}</div>')
         html_lines.append('</div></div>')
         
-    html_lines.append('</div></div></div>')
+        for tp in timeline_players:
+            dot_class = "dot-dead" if tp["unit"] == "Dead" else "dot-off" if tp["unit"] == "Offense" else "dot-def"
+            html_lines.append(f'<div class="tl-row"><div class="tl-name-col"><span class="dot {dot_class}"></span>{html.escape(tp["name"])}</div><div class="tl-years-col">')
+            
+            for y in t_years:
+                is_void = (tp["unit"] != "Dead" and y >= tp["faYear"])
+                is_fa = (tp["unit"] != "Dead" and y == tp["faYear"])
+                is_pot = (y == tp["potentialOutYear"])
+                
+                c_data = tp["timelineData"].get(y, {"cap": 0, "act": 0})
+                amount = c_data["cap"] + c_data["act"]
+                
+                cell_classes = ["tl-cell"]
+                if amount > 0:
+                    bg = "bg-dead" if tp["unit"] == "Dead" else "bg-void" if is_void else "bg-off" if tp["unit"] == "Offense" else "bg-def"
+                    cell_classes.append(bg)
+                    
+                html_lines.append(f'<div class="{" ".join(cell_classes)}">')
+                if amount > 0:
+                    txt_cls = "txt-void" if (is_void and tp["unit"] != "Dead") else "txt-val"
+                    html_lines.append(f'<span class="{txt_cls}">{format_money(amount)}</span>')
+                    if is_void and tp["unit"] != "Dead": html_lines.append('<span class="badge-void">VOID</span>')
+                
+                if is_pot: html_lines.append('<span class="badge-pot">✂️</span>')
+                if is_fa and amount == 0: html_lines.append('<span class="badge-fa">FA</span>')
+                html_lines.append('</div>')
+                
+            html_lines.append('</div></div>')
+            
+        html_lines.append('</div></div></div>')
     
     # [詳細テーブル]
     html_lines.append('<div class="cap-table-section">')
@@ -404,7 +403,6 @@ def generate_html_content(players, config):
         row_cls = "" if is_counted else "not-counted"
         save_cls = "text-save" if p["savings"] > 0 else "text-danger"
         
-        # JSでの検索・ソート用にdata属性を付与
         search_txt = f"{p['name']} {p['position']}".lower()
         html_lines.append(f"""
             <tr class="cap-roster-row {row_cls}" data-search="{html.escape(search_txt)}" data-cap="{p['currentCap']}" data-dead="{p['potentialDead']}" data-save="{p['savings']}">
@@ -418,8 +416,7 @@ def generate_html_content(players, config):
         """)
         
     html_lines.append('</tbody></table></div></div>')
-    
-    html_lines.append('</div>') # end of wrapper
+    html_lines.append('</div>')
     
     # JSスクリプト（検索とソートのみ）
     js_content = """
@@ -428,6 +425,8 @@ def generate_html_content(players, config):
     document.addEventListener("DOMContentLoaded", function () {
         const searchInput = document.getElementById("capSearchInput");
         const tableBody = document.querySelector("#capTable tbody");
+        if(!tableBody) return;
+        
         const rows = Array.from(tableBody.querySelectorAll(".cap-roster-row"));
         const headers = document.querySelectorAll("#capTable th.sortable");
         
@@ -437,20 +436,17 @@ def generate_html_content(players, config):
         function renderTable() {
             const query = (searchInput.value || "").toLowerCase().trim();
             
-            // フィルタリング
             const visibleRows = rows.filter(row => {
                 if (!query) return true;
                 return row.dataset.search.includes(query);
             });
             
-            // ソート
             visibleRows.sort((a, b) => {
                 const valA = parseFloat(a.dataset[sortCol]) || 0;
                 const valB = parseFloat(b.dataset[sortCol]) || 0;
                 return (valA - valB) * sortDir;
             });
             
-            // DOM更新
             rows.forEach(r => r.style.display = "none");
             visibleRows.forEach(r => {
                 r.style.display = "";
@@ -466,10 +462,10 @@ def generate_html_content(players, config):
             th.addEventListener("click", () => {
                 const col = th.dataset.sort;
                 if (sortCol === col) {
-                    sortDir *= -1; // 順序反転
+                    sortDir *= -1;
                 } else {
                     sortCol = col;
-                    sortDir = -1; // デフォルトは降順
+                    sortDir = -1;
                 }
                 renderTable();
             });
@@ -500,14 +496,18 @@ def update_hatena_blog(content_body):
         import xml.etree.ElementTree as ET
         root = ET.fromstring(get_resp.text)
         ns = {'atom': 'http://www.w3.org/2005/Atom'}
-        title = root.find('atom:title', ns).text
+        # 既存のカテゴリー設定は残す
         categories = [c.attrib['term'] for c in root.findall('atom:category', ns)]
     except Exception as e:
         print(f"[ERROR] Failed to get current entry: {e}", file=sys.stderr)
         return
 
+    # ★CONFIG から新しいタイトルを組み立てる
+    curr_year = CONFIG["CURRENT_YEAR"]
+    new_title = f"SALARY CAP // {curr_year}"
+
     escaped_body = html.escape(content_body)
-    escaped_title = html.escape(title)
+    escaped_title = html.escape(new_title)
     categories_xml = "\n".join([f'<category term="{html.escape(c)}" />' for c in categories])
     
     xml_data = f"""<?xml version="1.0" encoding="utf-8"?>
@@ -539,9 +539,4 @@ def update_hatena_blog(content_body):
 if __name__ == "__main__":
     players_data = fetch_cap_data()
     html_content = generate_html_content(players_data, CONFIG)
-    
-    # テストとして標準出力に出す場合は以下をアンコメント
-    # print(html_content)
-    
-    # 実際に更新する場合はコメントアウトを外す
-    # update_hatena_blog(html_content)
+    update_hatena_blog(html_content)
