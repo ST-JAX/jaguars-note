@@ -11,7 +11,7 @@ from requests.auth import HTTPBasicAuth
 # ==============================================================================
 CONFIG = {
     "CURRENT_YEAR": 2025,
-    "LEAGUE_CAP_LIMIT_MILLION": 279200000,
+    "LEAGUE_CAP_LIMIT_MILLION": 279.2,
     "IS_TOP51_MODE": False               # True: オフシーズン(Top51), False: シーズン中(全選手)
 }
 
@@ -186,7 +186,7 @@ def fetch_cap_data():
 # ==============================================================================
 def generate_html_content(players, config):
     curr_year = config["CURRENT_YEAR"]
-    cap_limit = int(config["LEAGUE_CAP_LIMIT_MILLION"] * 100)
+    cap_limit = int(config["LEAGUE_CAP_LIMIT_MILLION"] * 1000000)
     is_top51 = config["IS_TOP51_MODE"]
     
     active_players = [p for p in players if p["unit"] != "Dead"]
