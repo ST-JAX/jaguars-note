@@ -12,7 +12,7 @@ from requests.auth import HTTPBasicAuth
 CONFIG = {
     "CURRENT_YEAR": 2025,               # ※もしデータが2026年1年目のものなら2026にしてください
     "LEAGUE_CAP_LIMIT_MILLION": 279.2,  # リーグ基本キャップ
-    "CARRYOVER_MILLION": $15.890203,           # ★追加: 前年からの繰越金や調整額（ある場合）
+    "CARRYOVER_MILLION": 15.890203,           # ★追加: 前年からの繰越金や調整額（ある場合）
     "IS_TOP51_MODE": False               # True: オフシーズン(Top51), False: シーズン中(全選手)
 }
 
