@@ -186,7 +186,6 @@ def fetch_cap_data():
 def generate_html_content(players, config):
     curr_year = config["CURRENT_YEAR"]
     
-    # ★修正: キャップ計算の基礎値を分離
     base_cap_limit = int(config["LEAGUE_CAP_LIMIT_MILLION"] * 1000000)
     carryover_cap = int(config.get("CARRYOVER_MILLION", 0.0) * 1000000)
     adjusted_cap_limit = base_cap_limit + carryover_cap
@@ -226,8 +225,12 @@ def generate_html_content(players, config):
         pos_name = "ST" if p["unit"] == "Special Teams" else p["position"]
         pos_dict[pos_name] = pos_dict.get(pos_name, 0) + p["currentCap"]
         
-    # ★修正: 固定順ではなく、金額の多い順にソートする（横棒グラフ用）
+    fixed_pos_order = ["QB", "RB", "WR", "TE", "OL", "DL", "EDGE", "LB", "CB", "S", "ST"]
     pos_stats = []
+    for pos in fixed_pos_order:
+        if pos in pos_dict:
+            pos_stats.append({"pos": pos, "cap": pos_dict[pos], "pct": (pos_dict[pos] / total_cap * 100) if total_cap > 0 else 0})
+            del pos_dict[pos]
     for pos, cap in sorted(pos_dict.items(), key=lambda x: x[1], reverse=True):
         pos_stats.append({"pos": pos, "cap": cap, "pct": (cap / total_cap * 100) if total_cap > 0 else 0})
 
@@ -239,7 +242,6 @@ def generate_html_content(players, config):
     html_lines = []
     html_lines.append('<div class="cap-dashboard-wrapper">')
     
-    # ★修正: ヘッダーを計算式メインのUIに変更し、不要なテキストを削除
     html_lines.append(f"""
     <div class="cap-header">
         <div class="cap-header-calc">
@@ -268,7 +270,6 @@ def generate_html_content(players, config):
     </div>
     """)
     
-    # ★修正: Max Potential Savings を削除し、Total Cap Hit に変更
     html_lines.append(f"""
     <div class="cap-summary-grid">
         <div class="cap-summary-card">
@@ -328,16 +329,22 @@ def generate_html_content(players, config):
     </div>
     """)
     
-    # ★修正: 1本のバーではなく、縦に並ぶ横棒グラフ（プログレスバー形式）に変更
     pos_html = '<div class="pos-bars-container">'
+    # ★修正: 最もお金をかけているポジションの割合を取得
+    max_pos_pct = max([st["pct"] for st in pos_stats]) if pos_stats else 100
+    
     for st in pos_stats:
         # オフェンス/ディフェンス/STでバーの色を変える
         bar_color_class = "bar-st" if st["pos"] == "ST" else "bar-off" if st["pos"] in ["QB", "RB", "WR", "TE", "OL"] else "bar-def"
+        
+        # ★修正: 最大のポジションを基準(85%)にして幅をスケーリングする
+        scaled_width = (st["pct"] / max_pos_pct) * 85 if max_pos_pct > 0 else 0
+        
         pos_html += f"""
         <div class="pos-bar-row">
             <div class="pos-bar-label">{st["pos"]}</div>
             <div class="pos-bar-track">
-                <div class="pos-bar-fill {bar_color_class}" style="width: {st["pct"]}%;"></div>
+                <div class="pos-bar-fill {bar_color_class}" style="width: {scaled_width}%;"></div>
             </div>
             <div class="pos-bar-value">{format_money(st["cap"])} <span class="pos-bar-pct">({st["pct"]:.1f}%)</span></div>
         </div>
@@ -354,13 +361,12 @@ def generate_html_content(players, config):
     
     timeline_players = sorted(active_players, key=lambda x: x["currentCap"], reverse=True)[:15]
     if timeline_players:
-        # ★修正: タイムラインを「直近5年間」に固定
-        max_t_years = 5
-        t_years = [curr_year + i for i in range(max_t_years)]
+        # ★修正: タイムラインを「直近5年間」に完全固定
+        t_years = [curr_year + i for i in range(5)]
         
         html_lines.append('<div class="cap-timeline-section">')
         html_lines.append('<h4>Core Players Timeline</h4>')
-        html_lines.append('<p class="cap-note">※チーム負担額上位15名のみ表示（直近5年）</p>')
+        html_lines.append('<p class="cap-note">※チーム負担額上位15名のみ表示（直近5年間）</p>')
         html_lines.append('<div class="cap-table-scroll"><div class="cap-timeline-inner">')
         
         html_lines.append('<div class="tl-header-row"><div class="tl-name-col">Player</div><div class="tl-years-col">')
@@ -449,7 +455,7 @@ def generate_html_content(players, config):
     html_lines.append('</tbody></table></div>')
     
     if len(active_players) > 20:
-        html_lines.append('<div class="cap-load-more-container" style="text-align: center; padding: 1rem;">')
+        html_lines.append('<div class="cap-load-more-container">')
         html_lines.append('<button id="capLoadMoreBtn" class="cap-btn-load-more">さらに表示</button>')
         html_lines.append('</div>')
         
