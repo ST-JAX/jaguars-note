@@ -10,9 +10,9 @@ from requests.auth import HTTPBasicAuth
 # 0. ⚙️ シーズン設定（毎年・時期によって変更する部分）
 # ==============================================================================
 CONFIG = {
-    "CURRENT_YEAR": 2025,               # ※もしデータが2026年1年目のものなら2026にしてください
+    "CURRENT_YEAR": 2025,
     "LEAGUE_CAP_LIMIT_MILLION": 279.2,  # リーグ基本キャップ
-    "CARRYOVER_MILLION": 15.890203,           # ★追加: 前年からの繰越金や調整額（ある場合）
+    "CARRYOVER_MILLION": 15.890203,     # 前年からの繰越金
     "IS_TOP51_MODE": False               # True: オフシーズン(Top51), False: シーズン中(全選手)
 }
 
@@ -185,8 +185,12 @@ def fetch_cap_data():
 # ==============================================================================
 def generate_html_content(players, config):
     curr_year = config["CURRENT_YEAR"]
-    total_cap_limit_million = config["LEAGUE_CAP_LIMIT_MILLION"] + config.get("CARRYOVER_MILLION", 0.0)
-    cap_limit = int(total_cap_limit_million * 1000000)
+    
+    # ★修正: キャップ計算の基礎値を分離
+    base_cap_limit = int(config["LEAGUE_CAP_LIMIT_MILLION"] * 1000000)
+    carryover_cap = int(config.get("CARRYOVER_MILLION", 0.0) * 1000000)
+    adjusted_cap_limit = base_cap_limit + carryover_cap
+    
     is_top51 = config["IS_TOP51_MODE"]
     
     active_players = [p for p in players if p["unit"] != "Dead"]
@@ -206,7 +210,7 @@ def generate_html_content(players, config):
                 countable_players.append(p)
                 
     team_total = total_cap + total_act_dead
-    cap_space = cap_limit - team_total
+    cap_space = adjusted_cap_limit - team_total
     
     off_cap = sum(p["currentCap"] for p in countable_players if p["unit"] == "Offense")
     def_cap = sum(p["currentCap"] for p in countable_players if p["unit"] == "Defense")
@@ -222,12 +226,8 @@ def generate_html_content(players, config):
         pos_name = "ST" if p["unit"] == "Special Teams" else p["position"]
         pos_dict[pos_name] = pos_dict.get(pos_name, 0) + p["currentCap"]
         
-    fixed_pos_order = ["QB", "RB", "WR", "TE", "OL", "DL", "EDGE", "LB", "CB", "S", "ST"]
+    # ★修正: 固定順ではなく、金額の多い順にソートする（横棒グラフ用）
     pos_stats = []
-    for pos in fixed_pos_order:
-        if pos in pos_dict:
-            pos_stats.append({"pos": pos, "cap": pos_dict[pos], "pct": (pos_dict[pos] / total_cap * 100) if total_cap > 0 else 0})
-            del pos_dict[pos]
     for pos, cap in sorted(pos_dict.items(), key=lambda x: x[1], reverse=True):
         pos_stats.append({"pos": pos, "cap": cap, "pct": (cap / total_cap * 100) if total_cap > 0 else 0})
 
@@ -235,27 +235,40 @@ def generate_html_content(players, config):
     top_pots = sorted(active_players, key=lambda x: x["potentialDead"], reverse=True)[:5]
     top_saves = sorted(active_players, key=lambda x: x["savings"], reverse=True)[:5]
     top_deads = sorted([p for p in players if p["unit"] == "Dead"], key=lambda x: x["currentActualDead"], reverse=True)[:5]
-    
-    max_savings = max([p["savings"] for p in active_players]) if active_players else 0
 
     html_lines = []
     html_lines.append('<div class="cap-dashboard-wrapper">')
     
+    # ★修正: ヘッダーを計算式メインのUIに変更し、不要なテキストを削除
     html_lines.append(f"""
     <div class="cap-header">
-        <div class="cap-header-titles">
-            <span class="cap-subtitle"><strong>【{curr_year}シーズン】</strong> 現在のキャップ状況・確定デッドマネー・契約見通し</span>
+        <div class="cap-header-calc">
+            <div class="calc-box">
+                <span class="calc-label">LEAGUE CAP</span>
+                <span class="calc-value">{format_money(base_cap_limit)}</span>
+            </div>
+            <div class="calc-math">+</div>
+            <div class="calc-box">
+                <span class="calc-label">CARRYOVER</span>
+                <span class="calc-value">{format_money(carryover_cap)}</span>
+            </div>
+            <div class="calc-math">=</div>
+            <div class="calc-box box-highlight">
+                <span class="calc-label">ADJUSTED CAP</span>
+                <span class="calc-value">{format_money(adjusted_cap_limit)}</span>
+            </div>
         </div>
+        
         <div class="cap-header-stats">
-            <div class="cap-mode-badge">{'Top 51 モード適用中' if is_top51 else '全選手(シーズン中)モード'}</div>
-            <div class="cap-limit-info">League Cap: {format_money(cap_limit)}</div>
+            <div class="cap-space-label">REMAINING SPACE {'<span class="top51-note">(Top 51)</span>' if is_top51 else ''}</div>
             <div class="cap-space-info {'space-ok' if cap_space >= 0 else 'space-ng'}">
-                Remaining: {format_money(cap_space)}
+                {format_money(cap_space)}
             </div>
         </div>
     </div>
     """)
     
+    # ★修正: Max Potential Savings を削除し、Total Cap Hit に変更
     html_lines.append(f"""
     <div class="cap-summary-grid">
         <div class="cap-summary-card">
@@ -263,12 +276,12 @@ def generate_html_content(players, config):
             <div class="card-value">{format_money(total_cap)}</div>
         </div>
         <div class="cap-summary-card dead-card">
-            <div class="card-label">Actual Dead Money</div>
+            <div class="card-label">Dead Money</div>
             <div class="card-value">{format_money(total_act_dead)}</div>
         </div>
-        <div class="cap-summary-card save-card">
-            <div class="card-label">Max Potential Savings</div>
-            <div class="card-value">{format_money(max_savings)}</div>
+        <div class="cap-summary-card total-card">
+            <div class="card-label">Total Team Cap Hit</div>
+            <div class="card-value">{format_money(team_total)}</div>
         </div>
     </div>
     """)
@@ -315,30 +328,39 @@ def generate_html_content(players, config):
     </div>
     """)
     
-    pos_html = ""
-    pos_legend = ""
-    for i, st in enumerate(pos_stats):
-        color_class = f"pos-color-{i % 8 + 1}"
-        pos_html += f'<div class="cap-segment {color_class}" style="width: {st["pct"]}%;" title="{st["pos"]}: {format_money(st["cap"])}"></div>'
-        pos_legend += f'<span class="legend-item"><span class="dot {color_class}"></span>{st["pos"]} <small>{st["pct"]:.0f}%</small></span>'
+    # ★修正: 1本のバーではなく、縦に並ぶ横棒グラフ（プログレスバー形式）に変更
+    pos_html = '<div class="pos-bars-container">'
+    for st in pos_stats:
+        # オフェンス/ディフェンス/STでバーの色を変える
+        bar_color_class = "bar-st" if st["pos"] == "ST" else "bar-off" if st["pos"] in ["QB", "RB", "WR", "TE", "OL"] else "bar-def"
+        pos_html += f"""
+        <div class="pos-bar-row">
+            <div class="pos-bar-label">{st["pos"]}</div>
+            <div class="pos-bar-track">
+                <div class="pos-bar-fill {bar_color_class}" style="width: {st["pct"]}%;"></div>
+            </div>
+            <div class="pos-bar-value">{format_money(st["cap"])} <span class="pos-bar-pct">({st["pct"]:.1f}%)</span></div>
+        </div>
+        """
+    pos_html += '</div>'
         
     html_lines.append(f"""
     <div class="cap-chart-box">
         <h4>Position Allocation</h4>
-        <div class="cap-chart-bar">{pos_html}</div>
-        <div class="cap-chart-legend grid-legend">{pos_legend}</div>
+        {pos_html}
     </div>
     """)
     html_lines.append('</div>')
     
     timeline_players = sorted(active_players, key=lambda x: x["currentCap"], reverse=True)[:15]
     if timeline_players:
-        max_t_years = max([p["contractLength"] for p in timeline_players] + [5])
+        # ★修正: タイムラインを「直近5年間」に固定
+        max_t_years = 5
         t_years = [curr_year + i for i in range(max_t_years)]
         
         html_lines.append('<div class="cap-timeline-section">')
         html_lines.append('<h4>Core Players Timeline</h4>')
-        html_lines.append('<p class="cap-note">※チーム負担額上位15名のみ表示</p>')
+        html_lines.append('<p class="cap-note">※チーム負担額上位15名のみ表示（直近5年）</p>')
         html_lines.append('<div class="cap-table-scroll"><div class="cap-timeline-inner">')
         
         html_lines.append('<div class="tl-header-row"><div class="tl-name-col">Player</div><div class="tl-years-col">')
@@ -406,7 +428,6 @@ def generate_html_content(players, config):
         <tbody>
     """)
     
-    # ★修正: ループ内で、21件目以降は初期状態で display: none を指定
     for i, p in enumerate(active_players):
         is_counted = not is_top51 or (p["id"] in top51_ids)
         row_cls = "" if is_counted else "not-counted"
@@ -427,16 +448,14 @@ def generate_html_content(players, config):
         
     html_lines.append('</tbody></table></div>')
     
-    # ★修正: さらに表示ボタンを追加
     if len(active_players) > 20:
         html_lines.append('<div class="cap-load-more-container" style="text-align: center; padding: 1rem;">')
         html_lines.append('<button id="capLoadMoreBtn" class="cap-btn-load-more">さらに表示</button>')
         html_lines.append('</div>')
         
     html_lines.append('</div>')
-    html_lines.append('</div>') # end of wrapper
+    html_lines.append('</div>') 
     
-    # ★修正: JS内に表示件数制御とボタンクリックイベントを追加
     js_content = """
     <p>
     <script>
@@ -457,7 +476,6 @@ def generate_html_content(players, config):
         function renderTable() {
             const query = (searchInput.value || "").toLowerCase().trim();
             
-            // 検索内容が変わったら表示件数をリセット
             if (query !== currentQuery) {
                 visibleCount = 20;
                 currentQuery = query;
@@ -474,17 +492,14 @@ def generate_html_content(players, config):
                 return (valA - valB) * sortDir;
             });
             
-            // 一旦すべて非表示
             rows.forEach(r => r.style.display = "none");
             
-            // visibleCount の数だけ表示してDOMに追加
             const rowsToShow = visibleRows.slice(0, visibleCount);
             rowsToShow.forEach(r => {
                 r.style.display = "";
                 tableBody.appendChild(r);
             });
             
-            // もっと見るボタンの表示/非表示制御
             if (loadMoreBtn) {
                 if (visibleCount < visibleRows.length) {
                     loadMoreBtn.style.display = "inline-block";
@@ -518,7 +533,6 @@ def generate_html_content(players, config):
             });
         });
         
-        // 初期描画時にボタンの表示判定を走らせる
         renderTable();
     });
     </script>
