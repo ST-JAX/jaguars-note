@@ -1,3 +1,12 @@
+<div id="custom-header-area">
+    <a href="/" class="header-image-link">
+        <picture>
+            <source media="(max-width: 768px)" srcset="https://cdn-ak.f.st-hatena.com/images/fotolife/S/StaiL21/20260213/20260213033222.webp">
+            <img src="https://cdn-ak.f.st-hatena.com/images/fotolife/S/StaiL21/20260213/20260213042257.webp" alt="blog Title">
+        </picture>
+    </a>
+</div>
+
 <nav class="global-nav">
   <div class="global-nav-inner">
     <ul class="nav-list">
@@ -13,7 +22,7 @@
           <span class="nav-text"><i class="fas fa-users"></i> TEAM</span>
         </a>
         <ul class="nav-dropdown">
-          <li><a href="" style="color: #aaa;"><i class="far fa-id-card"></i> Roster</a></li>
+          <li><a href="/roster-latest";"><i class="far fa-id-card"></i> Roster</a></li>
           <li><a href="" style="color: #aaa;"><i class="fas fa-landmark"></i> History</a></li>
           <li class="dropdown-separator"></li>
           <li><a href="/archive/category/%E9%81%B8%E6%89%8B%E3%83%BB%E3%83%81%E3%83%BC%E3%83%A0%E6%83%85%E5%A0%B1"><i class="fas fa-circle-info"></i> Team Info</a></li>
@@ -28,7 +37,7 @@
         <ul class="nav-dropdown">
           <li><a href="/schedule"><i class="fas fa-list-ol"></i> Schedule</a></li>
           <li class="dropdown-separator"></li>
-          <li><a href="/archive/category/%E8%A9%A6%E5%90%88%E3%83%97%E3%83%AC%E3%83%93%E3%83%A5%E3%83%BC%E3%83%BB%E3%83%AC%E3%83%93%E3%83%A5%E3%83%BC"><i class="fas fa-football"></i> Game Report</a></li>
+          <li><a href="/archive/category/%E8%A9%A6%E5%90%88%E3%83%97%E3%83%AC%E3%83%93%E3%83%A5%E3%83%BC%E3%83%BB%E3%83%AC%E3%83%93%E3%83%A5%E3%83%BC"><i class="fas fa-football"></i> Game Review</a></li>
           <li><a href="/archive/category/%E3%82%B7%E3%83%BC%E3%82%BA%E3%83%B3%E3%83%97%E3%83%AC%E3%83%93%E3%83%A5%E3%83%BC%E3%83%BB%E3%83%AC%E3%83%93%E3%83%A5%E3%83%BC"><i class="fas fa-chart-line"></i> Season Report</a></li>
         </ul>
       </li>
@@ -38,7 +47,7 @@
           <span class="nav-text"><i class="far fa-newspaper"></i> MEDIA</span>
         </a>
         <ul class="nav-dropdown">
-          <li><a href="/News"><i class="fas fa-bullhorn"></i> Latest News</a></li>
+          <li><a href="/news"><i class="fas fa-bullhorn"></i> News</a></li>
           <li><a href="/archive/category/%E3%81%9D%E3%81%AE%E4%BB%96%E3%83%8B%E3%83%A5%E3%83%BC%E3%82%B9%E3%83%BBTopics"><i class="fas fa-bolt"></i> Topics</a></li>
           <li class="dropdown-separator"></li>
           <li><a href="/archive"><i class="fas fa-box-archive"></i> All Archives</a></li>
@@ -58,88 +67,100 @@
   </div>
 </nav>
 
-<button id="mobile-menu-trigger" class="mobile-menu-btn">
-  <span class="bar bar-1"></span>
-  <span class="bar bar-2"></span>
-  <span class="bar bar-3"></span>
-  <span class="menu-label">MENU</span>
-</button>
+<div id="mobile-menu-overlay">
+    <nav class="mobile-nav-content">
+        <ul class="mobile-menu-list">
+            
+            <li class="m-item m-menu-header">
+                <span class="m-header-text">NAVIGATION</span>
+                <span class="m-header-deco"></span>
+            </li>
 
-<div id="mobile-menu-overlay" class="mobile-overlay">
-  <div class="bg-shape shape-1"></div>
-  <div class="bg-shape shape-2"></div>
+            <li class="m-item has-sub">
+                <span class="m-label">TEAM</span>
+                <div class="m-sub-links">
+                    <a href="/roster-latest"><i class="far fa-id-card"></i> Roster</a>
+                    <a href="#"><i class="fas fa-landmark"></i> History</a>
+                    <a href="/archive/category/%E9%81%B8%E6%89%8B%E3%83%BB%E3%83%81%E3%83%BC%E3%83%A0%E6%83%85%E5%A0%B1"><i class="fas fa-circle-info"></i> Team Info</a>
+                    <a href="/archive/category/%E3%83%89%E3%83%A9%E3%83%95%E3%83%88%E3%83%BBFA%E3%83%BB%E3%83%88%E3%83%AC%E3%83%BC%E3%83%89"><i class="fas fa-right-left"></i> Transactions</a>
+                </div>
+            </li>
 
-  <nav class="mobile-nav-content">
-    <ul class="mobile-menu-list">
-      <li class="m-item" style="--i:1;">
-        <a href="/" class="m-link"><i class="fas fa-home"></i> HOME</a>
-      </li>
-      <li class="m-item has-sub" style="--i:2;">
-        <span class="m-label">TEAM</span>
-        <div class="m-sub-links">
-          <a href="" style="color: #aaa;">Roster</a>
-          <a href="" style="color: #aaa;">History</a>
-          <a href="/archive/category/%E9%81%B8%E6%89%8B%E3%83%BB%E3%83%81%E3%83%BC%E3%83%A0%E6%83%85%E5%A0%B1">Team Info</a>
-          <a href="/archive/category/%E3%83%89%E3%83%A9%E3%83%95%E3%83%88%E3%83%BBFA%E3%83%BB%E3%83%88%E3%83%AC%E3%83%BC%E3%83%89">Transactions</a>
-        </div>
-      </li>
-      <li class="m-item has-sub" style="--i:3;">
-        <span class="m-label">SEASON</span>
-        <div class="m-sub-links">
-          <a href="/schedule">Schedule</a>
-          <a href="/archive/category/%E8%A9%A6%E5%90%88%E3%83%97%E3%83%AC%E3%83%93%E3%83%A5%E3%83%BC%E3%83%BB%E3%83%AC%E3%83%93%E3%83%A5%E3%83%BC">Game Report</a>
-          <a href="/archive/category/%E3%82%B7%E3%83%BC%E3%82%BA%E3%83%B3%E3%83%97%E3%83%AC%E3%83%93%E3%83%A5%E3%83%BC%E3%83%BB%E3%83%AC%E3%83%93%E3%83%A5%E3%83%BC">Season Report</a>
-        </div>
-      </li>
-      <li class="m-item has-sub" style="--i:4;">
-        <span class="m-label">MEDIA</span>
-        <div class="m-sub-links">
-          <a href="/News">Latest News</a>
-          <a href="/archive/category/%E3%81%9D%E3%81%AE%E4%BB%96%E3%83%8B%E3%83%A5%E3%83%BC%E3%82%B9%E3%83%BBTopics">Topics</a>
-          <a href="/archive">All Archives</a>
-        </div>
-      </li>
-      <li class="m-item" style="--i:5;">
-        <form method="get" action="/search" class="m-search-form">
-          <input type="text" name="q" placeholder="SEARCH..." />
-          <button type="submit"><i class="fas fa-magnifying-glass"></i></button>
-        </form>
-      </li>
-    </ul>
-  </nav>
-</div>
+            <li class="m-item has-sub">
+                <span class="m-label">SEASON</span>
+                <div class="m-sub-links">
+                    <a href="/schedule-2025"><i class="fas fa-list-ol"></i> Schedule</a>
+                    <a href="/archive/category/%E8%A9%A6%E5%90%88%E3%83%97%E3%83%AC%E3%83%93%E3%83%A5%E3%83%BC%E3%83%BB%E3%83%AC%E3%83%93%E3%83%A5%E3%83%BC"><i class="fas fa-football"></i> Game Reviews</a>
+                    <a href="/archive/category/%E3%82%B7%E3%83%BC%E3%82%BA%E3%83%B3%E3%83%97%E3%83%AC%E3%83%93%E3%83%A5%E3%83%BC%E3%83%BB%E3%83%AC%E3%83%93%E3%83%A5%E3%83%BC"><i class="fas fa-chart-line"></i> Season Report</a>
+                </div>
+            </li>
 
-<div id="mobileSearchBar" class="mobile-search-bar">
-  <form method="get" action="/search" class="header-search-form">
-    <input type="text" name="q" placeholder="SEARCH..." />
-    <button type="submit" class="header-search-button">
-      <i class="fas fa-magnifying-glass"></i>
-    </button>
-  </form>
+            <li class="m-item has-sub">
+                <span class="m-label">MEDIA</span>
+                <div class="m-sub-links">
+                    <a href="/news"><i class="fas fa-bullhorn"></i> News</a>
+                    <a href="/archive/category/%E3%81%9D%E3%81%AE%E4%BB%96%E3%83%8B%E3%83%A5%E3%83%BC%E3%82%B9%E3%83%BBTopics"><i class="fas fa-bolt"></i> Topics</a>
+                    <a href="/archive"><i class="fas fa-box-archive"></i> All Archives</a>
+                </div>
+            </li>
+
+            <li class="m-item">
+                <form method="get" action="/search" class="m-search-form">
+                    <input type="text" name="q" placeholder="SEARCH..." />
+                    <button type="submit"><i class="fas fa-magnifying-glass"></i></button>
+                </form>
+            </li>
+        </ul>
+    </nav>
 </div>
 
 <nav class="bottom-nav">
-  <a href="/" class="b-item">
-    <i class="fas fa-home"></i>
-    <span>HOME</span>
-  </a>
-  <a href="/archive" class="b-item">
-    <i class="fas fa-box-archive"></i>
-    <span>ARCHIVE</span>
-  </a>
-  <a href="" class="b-item">
-    <i class="fas fa-users"></i>
-    <span>---</span>
-  </a>
-  <a href="javascript:void(0);" onclick="toggleSearchBar()" class="b-item">
-    <i class="fas fa-magnifying-glass"></i>
-    <span>SEARCH</span>
-  </a>
-  <a href="javascript:void(0);" id="scroll-top-button" class="b-item nav-top">
-    <i class="fas fa-chevron-up"></i>
-    <span>TOP</span>
-  </a>
+    
+    <div class="nav-curtain"></div>
+
+    <div class="bottom-circle-mask"></div>
+
+    <div class="bottom-side-container">
+        <div class="side-half left-half">
+            <a href="/" class="b-item">
+                <i class="fas fa-home"></i>
+                <span>HOME</span>
+            </a>
+            <a href="/schedule" class="b-item inner-item">
+                <i class="fas fa-calendar-days"></i>
+                <span>SCHEDULE</span>
+            </a>
+        </div>
+        
+        <div class="side-half right-half">
+            <a href="/roster-latest" class="b-item inner-item">
+                <i class="fas fa-users"></i>
+                <span>ROSTER</span>
+            </a>
+            <a href="#" id="scroll-top-button" class="b-item">
+                <i class="fas fa-chevron-up"></i>
+                <span>TOP</span>
+            </a>
+        </div>
+    </div>
+
+    <a href="javascript:void(0);" onclick="toggleMobileMenu()" class="center-menu-btn">
+        <div class="coin-box">
+            <div class="coin-face face-front">
+                <img src="https://cdn-ak.f.st-hatena.com/images/fotolife/S/StaiL21/20260126/20260126214503.png" class="center-icon icon-white">
+                <span class="center-label label-white">MENU</span>
+            </div>
+            <div class="coin-face face-back">
+                <img src="https://cdn-ak.f.st-hatena.com/images/fotolife/S/StaiL21/20260126/20260126214503.png" class="center-icon icon-black">
+                <span class="center-label label-black">CLOSE</span>
+            </div>
+        </div>
+    </a>
+
 </nav>
+
+<a href="#" id="pc-back-to-top" class="pc-top-btn"><i class="fas fa-chevron-up"></i></a>
+
 
 <div id='score-wrapper'>
   <div id='score-bar'></div>
@@ -156,6 +177,8 @@
       </div>
     </div>
   </div>
-
-  <button id="header-toggle-btn" onclick="toggleHeader()"><i class="fa fa-chevron-up"></i></button>
 </div>
+
+<button id="header-toggle-btn">
+  <span class="toggle-icon"></span>
+</button>
