@@ -1,30 +1,92 @@
+<footer id="jn-footer">
+    <div class="footer-content">
+        <img src="https://cdn-ak.f.st-hatena.com/images/fotolife/S/StaiL21/20250424/20250424223830.png" class="footer-icon">
+        <div class="footer-text">JAGUARS NOTE</div>
+    </div>
+    <div class="footer-copy">&copy; 2022-2026 Jaguars Note.</div>
+    <div class="footer-spacer"></div>
+</footer>
+
+<script>
+    // --- A. モバイルメニュー開閉関数 ---
+    window.toggleMobileMenu = function() {
+        var menu = document.getElementById('mobile-menu-overlay');
+        if (!menu) return;
+
+        menu.classList.toggle('active');
+
+        if(menu.classList.contains('active')) {
+            document.body.classList.add('menu-open');
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.classList.remove('menu-open');
+            document.body.style.overflow = '';
+        }
+    };
+
+    // --- B. ページ読み込み後の処理 ---
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // -------------------------------------------------
+        // 1. スマホ用ボトムナビのTOPボタン
+        // -------------------------------------------------
+        const mobileTopBtn = document.getElementById('scroll-top-button');
+        if (mobileTopBtn) {
+            mobileTopBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+
+        // -------------------------------------------------
+        // 2. PC用トップへ戻るボタン (ここを追加！)
+        // -------------------------------------------------
+        const pcTopBtn = document.getElementById('pc-back-to-top');
+        
+        if (pcTopBtn) {
+            // クリックしたら戻る
+            pcTopBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+
+            // スクロールしたら表示/非表示を切り替える
+            window.addEventListener('scroll', function() {
+                // 300px以上スクロールしたら表示
+                if (window.scrollY > 300) {
+                    pcTopBtn.classList.add('show');
+                } else {
+                    pcTopBtn.classList.remove('show');
+                }
+            });
+        }
+    });
+</script>
+
 <script>
 // ==========================================
 // 1. 全てのクリックイベントを一括管理（イベント委譲）
 // ==========================================
 document.addEventListener('click', function (e) {
-    
-    // --- [追加] ファントムメニュー（右上のボタン）の開閉 ---
-    const menuTrigger = e.target.closest('#mobile-menu-trigger');
-    if (menuTrigger) {
-        const overlay = document.getElementById('mobile-menu-overlay');
-        const body = document.body;
-        if (overlay) {
-            menuTrigger.classList.toggle('active');
-            overlay.classList.toggle('active');
-            body.classList.toggle('menu-open');
-        }
-        return;
-    }
 
     // A. メインヘッダー全体の開閉（トグルボタン）
     const headerToggle = e.target.closest('#header-toggle-btn');
+
     if (headerToggle) {
         const wrapper = document.getElementById('score-wrapper');
         if (wrapper) {
+            // ラッパーの開閉切り替え
             const isCollapsed = wrapper.classList.toggle('is-collapsed');
+            
+            // ★ボタンの見た目も切り替え（赤⇔黒）
+            headerToggle.classList.toggle('is-collapsed', isCollapsed);
+            
+            // 状態を保存
             localStorage.setItem('headerCollapsed', isCollapsed);
-            adjustBodyPadding();
+            
+            if (typeof adjustBodyPadding === 'function') {
+                adjustBodyPadding();
+            }
         }
         return;
     }
@@ -73,12 +135,17 @@ document.addEventListener('click', function (e) {
         }
         return;
     }
-
-    // E. トップへ戻るボタン
-    const topBtn = e.target.closest('#scroll-top-button');
-    if (topBtn) {
-        e.preventDefault();
-        window.scrollTo({ top: 0, behavior: "smooth" });
+    
+    // E. 目次の開閉（ここを新しく追加！）
+    const tocLabel = e.target.closest('.toc-label');
+    if (tocLabel) {
+        const toc = document.querySelector('.table-of-contents');
+        if (toc) {
+            // ラベルの矢印アイコン回転用
+            tocLabel.classList.toggle('open');
+            // 目次本体の開閉用
+            toc.classList.toggle('is-open'); 
+        }
         return;
     }
 });
@@ -88,11 +155,36 @@ document.addEventListener('click', function (e) {
 // ==========================================
 document.addEventListener('DOMContentLoaded', function () {
     const wrapper = document.getElementById('score-wrapper');
+    const btn = document.getElementById('header-toggle-btn'); // ★ボタン要素も取得
     
     // --- 記憶に基づいたヘッダー状態の復元 ---
     const headerState = localStorage.getItem('headerCollapsed');
-    if (wrapper && headerState === 'true') {
-        wrapper.classList.add('is-collapsed');
+    
+    if (headerState === 'true') {
+        // 1. ヘッダーを閉じる
+        if (wrapper) {
+            wrapper.classList.add('is-collapsed');
+        }
+        
+        // 2. ★ボタンも「閉じた状態（黒・＋）」にする
+        if (btn) {
+            btn.classList.add('is-collapsed');
+        }
+    }
+    
+    // 必要なら本文のパディング調整などもここで実行
+    if (typeof adjustBodyPadding === 'function') {
+        adjustBodyPadding();
+    }
+    
+    // --- 目次のアコーディオン化用DOM構築（ここを新しく追加！） ---
+    const toc = document.querySelector('.table-of-contents');
+    if (toc) {
+        const toggleBlock = document.createElement('div');
+        toggleBlock.className = 'toc-toggle-block';
+        // P5風に英字にするのもカッコいいから "CONTENTS" にしてみたよ！
+        toggleBlock.innerHTML = '<div class="toc-label">CONTENTS <span class="toc-icon">▼</span></div>';
+        toc.parentNode.insertBefore(toggleBlock, toc);
     }
 
     // --- 年齢・NFLキャリア年数計算 ---
@@ -133,24 +225,6 @@ document.addEventListener('DOMContentLoaded', function () {
 // ==========================================
 // 3. システム関数（取得・制御）
 // ==========================================
-
-// [追加] スマホ検索バーの開閉（HTML内のonclickから呼ばれる）
-function toggleSearchBar() {
-  const bar = document.getElementById('mobileSearchBar');
-  if (!bar) return; 
-  
-  const input = bar.querySelector('input[type="text"]');
-  
-  if (bar.classList.contains('active')) {
-    bar.classList.remove('active');
-    if (input) input.blur(); 
-  } else {
-    bar.classList.add('active');
-    setTimeout(() => {
-      if (input) input.focus();
-    }, 300); 
-  }
-}
 
 // ヘッダーデータの取得
 function fetchJAXHeaderData() {
@@ -214,15 +288,34 @@ function initCarouselLogic() {
         }
     });
 
+   // JS内の update関数部分を修正
     const update = () => {
-        const sw = 200; 
-        const offset = -index * sw + (vn.offsetWidth - sw) / 2;
-        carousel.style.transition = "transform 0.3s ease-out";
+        // ★修正: 固定値(200)をやめて、実際の要素から幅を計算する
+        // カードの幅を取得
+        const slideWidth = slides[0].offsetWidth;
+        
+        // CSSで設定した gap (15px) を取得（計算済みスタイルから）
+        const style = window.getComputedStyle(carousel);
+        const gap = parseFloat(style.columnGap || style.gap || 0);
+    
+        // 1回に動かす距離 = カード幅 + 隙間
+        const step = slideWidth + gap;
+    
+        // センター合わせの計算
+        // (ビューポートの幅 - カード1枚分の幅) / 2 = 端の余白
+        const centerOffset = (vn.offsetWidth - slideWidth) / 2;
+    
+        // 現在のインデックス分だけ左へずらし、センター補正を足す
+        const offset = -(index * step) + centerOffset;
+
+        carousel.style.transition = "transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)";
         carousel.style.transform = `translateX(${offset}px)`;
     };
 
     const prev = document.querySelector(".schedule-prev");
     const next = document.querySelector(".schedule-next");
+    
+    
     if (prev) prev.onclick = () => { index = (index - 1 + slides.length) % slides.length; update(); };
     if (next) next.onclick = () => { index = (index + 1) % slides.length; update(); };
 
@@ -240,33 +333,69 @@ function initCarouselLogic() {
     window.addEventListener('resize', update);
 }
 
-// ニューススクロール
+// ニューススクロール関数（修正版）
 function startNewsScroll() {
     const vn = document.querySelector(".newsbar-b-viewport");
     const ln = document.querySelector(".js-newsbar-b-list");
     if (!vn || !ln) return;
-    const originalWidth = ln.scrollWidth / 2;
-    let x = vn.scrollLeft;
+
+    // 半分の位置（ループの折り返し地点）
+    // ※ flexboxの場合、scrollWidthが正しく取れるよう少し待つか、余裕を持たせる
+    let originalWidth = ln.scrollWidth / 2;
+
+    // 初期化
     let interacting = false;
     let timer = null;
+    let animationId = null;
+    
+    // 現在のスクロール速度
+    const speed = 0.8; // 好みで速度調整 (0.5〜1.0くらい)
 
     const animate = () => {
+        // ユーザーが触っていない時だけ自動スクロール
         if (!interacting) {
-            x += 0.5;
-            if (x >= originalWidth) x -= originalWidth;
-            vn.scrollLeft = x;
+            // 現在の位置に速度を足す
+            vn.scrollLeft += speed;
+
+            // 半分を超えたら最初に戻す（無限ループ）
+            // ※ 誤差吸収のため >= で判定
+            if (vn.scrollLeft >= originalWidth) {
+                vn.scrollLeft = vn.scrollLeft - originalWidth;
+            }
         }
-        requestAnimationFrame(animate);
+        animationId = requestAnimationFrame(animate);
     };
 
-    const stop = () => { interacting = true; if (timer) clearTimeout(timer); };
-    const start = () => { timer = setTimeout(() => { x = vn.scrollLeft; interacting = false; }, 1500); };
+    // イベント: 触った時
+    const stop = () => {
+        interacting = true;
+        if (timer) clearTimeout(timer);
+        // アニメーションは回し続けるが、scrollLeftへの加算だけ止める
+        // これにより、ユーザーのネイティブなスクロール操作と喧嘩しない
+    };
 
+    // イベント: 離した時
+    const start = () => {
+        // すぐ再開せず、少し余韻を残す（誤操作防止）
+        timer = setTimeout(() => {
+            interacting = false;
+            // リサイズ等で幅が変わっている可能性があるので再取得
+            originalWidth = ln.scrollWidth / 2;
+        }, 1000); 
+    };
+
+    // イベントリスナー設定
     vn.addEventListener("touchstart", stop, { passive: true });
-    vn.addEventListener("touchmove", stop, { passive: true });
+    vn.addEventListener("touchmove", stop, { passive: true }); // 追加: 動かしている間も止める
     vn.addEventListener("touchend", start, { passive: true });
+    
+    // PCのマウスホバー用
     vn.addEventListener("mouseenter", stop);
     vn.addEventListener("mouseleave", start);
+
+    // アニメーション開始
+    // 重複防止のため一度キャンセル
+    if (vn.dataset.animId) cancelAnimationFrame(vn.dataset.animId);
     animate();
 }
 
